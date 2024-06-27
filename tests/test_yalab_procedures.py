@@ -5,9 +5,6 @@
 import pytest
 
 
-from yalab_procedures import yalab_procedures
-
-
 @pytest.fixture
 def response():
     """Sample pytest fixture.
