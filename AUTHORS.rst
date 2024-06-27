@@ -6,6 +6,7 @@ Development Lead
 ----------------
 
 * YALab DevOps <yalab.dev@gmail.com>
+* Gal Kepler <galkepler@gmail.com>
 
 Contributors
 ------------
