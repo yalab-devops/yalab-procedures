@@ -44,9 +44,6 @@ isort = "^5.13.2"
 requires = ["poetry-core>=1.9.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-yalab-procedures = "yalab-procedures:main"
-
 [tool.setuptools]
 package-dir = {"" = "src"}
 
