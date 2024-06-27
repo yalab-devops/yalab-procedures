@@ -1,0 +1,52 @@
+name: build
+on: [push, pull_request]
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "check"
+            python: "3.11"
+            toxpython: "python3.11"
+            tox_env: "check"
+            os: "ubuntu-latest"
+          - name: "docs"
+            python: "3.11"
+            toxpython: "python3.11"
+            tox_env: "docs"
+            os: "ubuntu-latest"
+          - name: "py310 (ubuntu)"
+            python: "3.10"
+            toxpython: "python3.10"
+            python_arch: "x64"
+            tox_env: "py310"
+            os: "ubuntu-latest"
+          - name: "py310 (windows)"
+            python: "3.10"
+            toxpython: "python3.10"
+            python_arch: "x64"
+            tox_env: "py310"
+            os: "windows-latest"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.python_arch }}
+      - name: install dependencies
+        run: |
+          python -mpip install --progress-bar=off .
+          pip --version
+          tox --version
+          pip list --format=freeze
+      - name: test
+        env:
+          TOXPYTHON: "${{ matrix.toxpython }}"
+        run: >
+          tox -e ${{ matrix.tox_env }} -v

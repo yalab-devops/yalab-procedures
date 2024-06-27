@@ -1,39 +1,51 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "yalab_procedures"
 version = "0.0.1"
-description = "The yalab-procedures repository is dedicated to managing and executing data processing procedures for MRI data in the Assaf Neuro Lab. This project aims to standardize and automate the various steps involved in processing structural and diffusion MRI data, ensuring consistency, efficiency, and traceability in our research workflows."
+description = "The yalab-procedures repository is dedicated to managing and executing data processing procedures for MRI data in the Assaf Neuro Lab."
+authors = ["YALab DevOps <yalab.dev@gmail.com>","Gal Kepler <galkepler@gmail.com>"]
+license = "MIT"
 readme = "README.rst"
-authors = [
-  {name = "YALab DevOps", email = "yalab.dev@gmail.com"}
-]
-maintainers = [
-  {name = "YALab DevOps", email = "yalab.dev@gmail.com"}
-]
-classifiers = [
-
-]
-license = {text = "MIT license"}
-dependencies = [
-  "typer"
-]
-
-[project.optional-dependencies]
-dev = [
-    "coverage",  # testing
-    "mypy",  # linting
-    "pytest",  # testing
-    "ruff"  # linting
-]
-
-[project.urls]
-
-bugs = "https://github.com/yalab-dev/yalab_procedures/issues"
-changelog = "https://github.com/yalab-dev/yalab_procedures/blob/master/changelog.md"
 homepage = "https://github.com/yalab-dev/yalab_procedures"
+repository = "https://github.com/yalab-dev/yalab_procedures"
+documentation = "https://github.com/yalab-dev/yalab_procedures"
+keywords = ["neuroscience", "MRI", "data processing", "automation", "standardization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+typer = "^0.12.0"
+tox = "^4.15.0"
+bump2version = "^1.0.1"
+wheel = "^0.43.0"
+sphinx = "^7.3.7"
+twine = "^5.1.0"
+ipykernel = "^6.29.4"
+pre-commit = "^3.7.1"
+chardet = "^5.2.0"
+sphinx-rtd-theme = "^2.0.0"
+
+[tool.poetry.dev-dependencies]
+coverage = "^7.5.1"  # testing
+mypy = "^1.10.0"  # linting
+pytest = "^8.2.1"  # testing
+ruff = "^0.4.4"  # linting
+black = "^24.4.2"
+flake8 = "^7.0"
+isort = "^5.13.2"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+yalab-procedures = "yalab-procedures:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -41,12 +53,7 @@ package-dir = {"" = "src"}
 [tool.setuptools.package-data]
 "*" = ["*.*"]
 
-
-
-
-# Mypy
-# ----
-
+# Mypy configuration
 [tool.mypy]
 files = "."
 
@@ -60,4 +67,3 @@ warn_no_return = true
 module = "tests.*"
 allow_untyped_defs = true
 disable_error_code = "attr-defined"
-
