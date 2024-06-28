@@ -1,7 +1,5 @@
 # tests/procedure/mock_procedure.py
-from src.yalab_procedures.procedure.procedure import (  # Adjust the import according to your project structure
-    Procedure,
-)
+from src.yalab_procedures.procedure.procedure import Procedure
 
 
 class MockProcedure(Procedure):

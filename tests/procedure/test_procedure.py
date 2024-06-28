@@ -5,9 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.procedure.mock_procedure import (  # Adjust the import according to your project structure
-    MockProcedure,
-)
+from tests.procedure.mock_procedure import MockProcedure
 
 
 @pytest.fixture
