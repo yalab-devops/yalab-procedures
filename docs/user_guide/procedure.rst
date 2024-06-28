@@ -158,7 +158,7 @@ To create a custom procedure, extend the `Procedure` class and implement the `ru
 
 .. code-block:: python
 
-    from src.yalab_procedures.procedure.procedure import Procedure
+    from src.yalab_procedures.procedures.procedure import Procedure
 
     class CustomProcedure(Procedure):
         def run(self):

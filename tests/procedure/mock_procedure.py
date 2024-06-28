@@ -1,5 +1,5 @@
 # tests/procedure/mock_procedure.py
-from src.yalab_procedures.procedure.procedure import Procedure
+from src.yalab_procedures.procedures.procedure import Procedure
 
 
 class MockProcedure(Procedure):
