@@ -103,16 +103,13 @@ class Procedure(ABC):
         Sets up the logging for the procedure.
         """
         handler: logging.Handler
-        if self.logging_destination:
-            self.logging_destination.mkdir(
-                parents=True, exist_ok=True
-            )  # Ensure the logging directory exists
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            log_filename = f"{self.__class__.__name__}_{timestamp}.log"
-            log_file_path = self.logging_destination / log_filename
-            handler = logging.FileHandler(log_file_path)
-        else:
-            handler = logging.StreamHandler()
+        self.logging_destination.mkdir(
+            parents=True, exist_ok=True
+        )  # Ensure the logging directory exists
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_filename = f"{self.__class__.__name__}_{timestamp}.log"
+        log_file_path = self.logging_destination / log_filename
+        handler = logging.FileHandler(log_file_path)
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )

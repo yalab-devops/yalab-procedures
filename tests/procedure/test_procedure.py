@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from tests.procedure.mock_procedure import MockProcedure
+from yalab_procedures.procedure.procedure import Procedure
 
 
 @pytest.fixture
@@ -20,6 +21,17 @@ def mock_procedure(temp_dir):
     output_dir = temp_dir / "output"
     input_dir.mkdir(parents=True, exist_ok=True)
     return MockProcedure(input_directory=input_dir, output_directory=output_dir)
+
+
+def base_procedure_raises_error():
+    with pytest.raises(NotImplementedError):
+        procedure = Procedure(input_directory="input", output_directory="output")
+        procedure.run()
+
+
+def test_missing_input_directory_raises_error():
+    with pytest.raises(FileNotFoundError):
+        _ = MockProcedure(input_directory="input", output_directory="output")
 
 
 def test_input_directory_validation(mock_procedure):
@@ -79,3 +91,18 @@ def test_load_config_file(temp_dir):
         input_directory=input_dir, output_directory=output_dir, config=config_file
     )
     assert procedure.config == config_data
+
+
+def test_config_json_decode_returns_empty_dict(temp_dir):
+    input_dir = temp_dir / "input"
+    output_dir = temp_dir / "output"
+    config_file = temp_dir / "config.json"
+    input_dir.mkdir(parents=True, exist_ok=True)
+
+    with open(config_file, "w") as f:
+        f.write("invalid json")
+
+    procedure = MockProcedure(
+        input_directory=input_dir, output_directory=output_dir, config=config_file
+    )
+    assert procedure.config == {}
