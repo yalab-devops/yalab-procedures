@@ -1,7 +1,7 @@
 Procedure Class API
 ===================
 
-.. automodule:: src.yalab_procedures.procedure.procedure
+.. automodule:: src.yalab_procedures.procedures.procedure
     :members:
     :undoc-members:
     :show-inheritance:

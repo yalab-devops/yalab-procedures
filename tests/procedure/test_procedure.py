@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from tests.procedure.mock_procedure import MockProcedure
-from yalab_procedures.procedure.procedure import Procedure
+from yalab_procedures.procedures.procedure import Procedure
 
 
 @pytest.fixture

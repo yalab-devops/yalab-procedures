@@ -43,7 +43,8 @@ Parameters:
 Methods
 -------
 
-### run()
+run()
+^^^^^
 
 The `run` method is an abstract method that must be implemented by any class that inherits from `Procedure`. It contains the logic for the specific procedure.
 
@@ -55,7 +56,8 @@ The `run` method is an abstract method that must be implemented by any class tha
             "This is the abstract method for the Procedure class. It should be implemented in the child class."
         )
 
-### _validate_input_directory()
+_validate_input_directory()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Validates the input directory to ensure it exists.
 
@@ -68,7 +70,8 @@ Validates the input directory to ensure it exists.
         else:
             raise FileNotFoundError(f"Input directory {input_directory} not found.")
 
-### _setup_output_directory()
+_setup_output_directory()
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sets up the output directory, creating it if it does not exist.
 
@@ -83,7 +86,8 @@ Sets up the output directory, creating it if it does not exist.
             self.log(f"Output directory {output_directory} created.")
         return output_directory
 
-### _setup_logging()
+_setup_logging()
+^^^^^^^^^^^^^^^^^
 
 Sets up the logging configuration, creating a log file in the specified directory.
 
@@ -107,7 +111,8 @@ Sets up the logging configuration, creating a log file in the specified director
         self.logger.setLevel(getattr(logging, self.logging_level.upper(), "INFO"))
         self._handler = handler
 
-### log()
+log()
+^^^^^^
 
 Logs a message at the INFO level.
 
@@ -116,7 +121,8 @@ Logs a message at the INFO level.
     def log(self, message: str) -> None:
         self.logger.info(message)
 
-### _load_config()
+_load_config()
+^^^^^^^^^^^^^^^
 
 Loads the configuration from a dictionary or a JSON file.
 
@@ -138,16 +144,6 @@ Loads the configuration from a dictionary or a JSON file.
                     return {}
         return {}
 
-### cleanup()
-
-Cleans up resources used by the procedure, including closing file handlers.
-
-.. code-block:: python
-
-    def cleanup(self) -> None:
-        if self._handler:
-            self._handler.close()
-            self.logger.removeHandler(self._handler)
 
 Creating a Custom Procedure
 ---------------------------
@@ -158,7 +154,7 @@ To create a custom procedure, extend the `Procedure` class and implement the `ru
 
 .. code-block:: python
 
-    from src.yalab_procedures.procedure.procedure import Procedure
+    from src.yalab_procedures.procedures.procedure import Procedure
 
     class CustomProcedure(Procedure):
         def run(self):
@@ -173,7 +169,6 @@ To create a custom procedure, extend the `Procedure` class and implement the `ru
         logging_level="DEBUG"
     )
     custom_procedure.run()
-    custom_procedure.cleanup()
 
 Using the Procedure Class
 -------------------------
@@ -181,12 +176,12 @@ Using the Procedure Class
 1. **Initialize the Procedure**: Provide the required directories and configuration.
 2. **Implement the `run` Method**: Define the specific steps of your procedure.
 3. **Run the Procedure**: Call the `run` method to execute the procedure.
-4. **Cleanup**: Call the `cleanup` method to ensure resources are properly released.
 
 ### Example
 
 .. code-block:: python
 
+    from src.yalab_procedures.procedures.custom_procedure import CustomProcedure
     procedure = CustomProcedure(
         input_directory="path/to/input",
         output_directory="path/to/output",
