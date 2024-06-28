@@ -8,6 +8,7 @@ Welcome to yalab-procedures's documentation!
    readme
    installation
    usage
+   api
    modules
    contributing
    authors

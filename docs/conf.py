@@ -110,7 +110,7 @@ html_static_path = ["_static"]
 # Output file base name for HTML help builder.
 htmlhelp_basename = "yalab_proceduresdoc"
 
-
+html_sidebars = {"**": ["sidebar-nav-bs"]}
 # -- Options for LaTeX output ------------------------------------------
 
 latex_elements = {
@@ -167,3 +167,10 @@ texinfo_documents = [
         "Miscellaneous",
     ),
 ]
+
+autodoc_default_options = {
+    "members": True,
+    "member-order": "bysource",
+    "undoc-members": True,
+    "show-inheritance": True,
+}
