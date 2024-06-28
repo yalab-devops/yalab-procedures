@@ -18,7 +18,7 @@ def temp_dir():
 def mock_procedure(temp_dir):
     input_dir = temp_dir / "input"
     output_dir = temp_dir / "output"
-    input_dir.mkdir()
+    input_dir.mkdir(parents=True, exist_ok=True)
     return MockProcedure(input_directory=input_dir, output_directory=output_dir)
 
 
@@ -38,8 +38,8 @@ def test_logging_file_creation(temp_dir):
     input_dir = temp_dir / "input"
     output_dir = temp_dir / "output"
     log_dir = temp_dir / "logs"
-    input_dir.mkdir()
-    log_dir.mkdir()
+    input_dir.mkdir(parents=True, exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     procedure = MockProcedure(
         input_directory=input_dir,
@@ -70,7 +70,7 @@ def test_load_config_file(temp_dir):
     output_dir = temp_dir / "output"
     config_file = temp_dir / "config.json"
     config_data = {"key": "value"}
-    input_dir.mkdir()
+    input_dir.mkdir(parents=True, exist_ok=True)
 
     with open(config_file, "w") as f:
         json.dump(config_data, f)
