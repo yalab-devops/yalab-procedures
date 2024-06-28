@@ -146,11 +146,13 @@ Loads the configuration from a dictionary or a JSON file.
 
 
 Creating a Custom Procedure
----------------------------
+----------------------------
 
 To create a custom procedure, extend the `Procedure` class and implement the `run` method with your specific logic.
 
-### Example
+
+Example
+^^^^^^^^
 
 .. code-block:: python
 
@@ -177,7 +179,8 @@ Using the Procedure Class
 2. **Implement the `run` Method**: Define the specific steps of your procedure.
 3. **Run the Procedure**: Call the `run` method to execute the procedure.
 
-### Example
+Example
+^^^^^^^^
 
 .. code-block:: python
 
@@ -190,16 +193,18 @@ Using the Procedure Class
         logging_level="INFO"
     )
     procedure.run()
-    procedure.cleanup()
 
-### Logging
+Logging
+^^^^^^^^
 
 Logs are saved in the specified logging directory with a timestamped filename. The logging level can be adjusted to control the verbosity of the log output.
 
-### Configuration
+Configuration
+^^^^^^^^^^^^^^
 
 Configuration settings can be passed as a dictionary or loaded from a JSON file. This flexibility allows for easy adjustments and reuse of settings across different procedures.
 
-### Conclusion
+Conclusion
+^^^^^^^^^^^
 
 The `Procedure` class provides a robust framework for standardizing data preprocessing tasks in your lab. By extending this class, you can create custom procedures that follow a consistent pattern, making it easier to manage and maintain your data processing workflows.
