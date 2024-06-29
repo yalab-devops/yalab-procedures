@@ -2,6 +2,8 @@
 yalab-procedures: MRI Data Processing Procedures of Prof. Yaniv Assaf's Lab
 ============================================================================
 
+.. image:: https://github.com/yalab-devops/yalab-procedures/blob/main/docs/_static/yalab_procedure-0.0.1.png
+
 The yalab-procedures repository is dedicated to managing and executing data processing procedures for MRI data in the Assaf Neuro Lab.
 This project aims to standardize and automate the various steps involved in processing structural and diffusion MRI data, ensuring consistency, efficiency, and traceability in our research workflows.
 
