@@ -1,12 +1,12 @@
 # tests/procedures/procedure/test_procedure.py
 
-import json
 import tempfile
 from pathlib import Path
 
 import pytest
 
 from tests.procedures.procedure.mock_procedure import MockProcedure
+from yalab_procedures.procedures.procedure import Procedure
 
 
 @pytest.fixture
@@ -24,8 +24,7 @@ def mock_procedure(temp_dir):
         "input_directory": str(input_dir),
         "output_directory": str(output_dir),
     }
-    procedure = MockProcedure(config=config)
-    procedure.validate_and_set_inputs(procedure.load_config(config))
+    procedure = MockProcedure(**config)
     return procedure
 
 
@@ -52,8 +51,7 @@ def test_logging_setup(temp_dir):
         "logging_level": "DEBUG",
     }
 
-    procedure = MockProcedure(config=config)
-    procedure.validate_and_set_inputs(procedure.load_config(config))
+    procedure = MockProcedure(**config)
     procedure.run()
 
     log_files = list(log_dir.glob("*.log"))
@@ -63,36 +61,16 @@ def test_logging_setup(temp_dir):
         assert "Running the mock procedure" in log_content
 
 
-def test_load_config_dict(temp_dir):
+def test_naive_procedure(temp_dir):
     input_dir = temp_dir / "input"
     output_dir = temp_dir / "output"
     input_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     config = {
         "input_directory": str(input_dir),
         "output_directory": str(output_dir),
     }
-    procedure = MockProcedure(config=config)
-    procedure.validate_and_set_inputs(procedure.load_config(config))
-    assert procedure.inputs.input_directory == str(input_dir)
-    assert procedure.inputs.output_directory == str(output_dir)
-
-
-def test_load_config_file(temp_dir):
-    input_dir = temp_dir / "input"
-    output_dir = temp_dir / "output"
-    config_file = temp_dir / "config.json"
-    config_data = {
-        "input_directory": str(input_dir),
-        "output_directory": str(output_dir),
-    }
-    input_dir.mkdir(parents=True, exist_ok=True)
-
-    with open(config_file, "w") as f:
-        json.dump(config_data, f)
-
-    procedure = MockProcedure(config=str(config_file))
-    config = procedure.load_config(str(config_file))
-    procedure.validate_and_set_inputs(config)
-    assert procedure.inputs.input_directory == str(input_dir)
-    assert procedure.inputs.output_directory == str(output_dir)
+    procedure = Procedure(**config)
+    with pytest.raises(NotImplementedError):
+        procedure.run()

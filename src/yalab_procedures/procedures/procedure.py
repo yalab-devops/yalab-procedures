@@ -1,10 +1,9 @@
 # src/yalab_procedures/procedures/procedure.py
 
-import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 from nipype.interfaces.base import (
     BaseInterface,
@@ -19,14 +18,6 @@ from nipype.interfaces.base import (
 class ProcedureInputSpec(BaseInterfaceInputSpec):
     input_directory = Directory(exists=True, mandatory=True, desc="Input directory")
     output_directory = Directory(mandatory=True, desc="Output directory")
-    config = traits.Either(
-        traits.Dict(traits.Str, traits.Any),
-        traits.File(exists=True),
-        mandatory=True,
-        desc="Configuration settings as a dictionary or a path to a JSON file",
-        usedefault=True,
-        default={},
-    )
     logging_directory = Directory(desc="Logging directory")
     logging_level = traits.Enum(
         "DEBUG",
@@ -47,20 +38,11 @@ class ProcedureOutputSpec(TraitedSpec):
 class Procedure(BaseInterface):
     input_spec = ProcedureInputSpec
     output_spec = ProcedureOutputSpec
-    config_keys = [
-        "input_directory",
-        "output_directory",
-        "logging_directory",
-        "logging_level",
-    ]
 
     def _run_interface(self, runtime) -> Any:
         """
         Executes the interface, setting up logging and calling the procedure.
         """
-        config = self.load_config(self.inputs.config)
-        self.validate_and_set_inputs(config)
-
         input_dir = Path(self.inputs.input_directory)
         output_dir = Path(self.inputs.output_directory)
         logging_dir = (
@@ -80,7 +62,7 @@ class Procedure(BaseInterface):
         self.logger.info(f"Running procedure with input directory: {input_dir}")
 
         # Run the custom procedure
-        self.run_procedure(input_dir, output_dir, config, logging_dir)
+        self.run_procedure(input_dir, output_dir, logging_dir)
 
         return runtime
 
@@ -116,35 +98,10 @@ class Procedure(BaseInterface):
 
         self.logger.debug(f"Logging setup complete. Log file: {log_file_path}")
 
-    def load_config(self, config: Union[Dict[str, Any], str]) -> Dict[str, Any]:
-        """
-        Loads the configuration from a dictionary or a JSON file.
-        """
-        if isinstance(config, dict):
-            return config
-        elif isinstance(config, str):
-            with open(config, "r") as f:
-                return json.load(f)
-        else:
-            raise ValueError(
-                "Config must be either a dictionary or a path to a JSON file."
-            )
-
-    def validate_and_set_inputs(self, config: Dict[str, Any]):
-        """
-        Validates the keys in the config and sets the inputs.
-        """
-        for key, value in config.items():
-            if key in self.config_keys:
-                setattr(self.inputs, key, value)
-            else:
-                raise ValueError(f"Invalid config key: {key}")
-
     def run_procedure(
         self,
         input_dir: Path,
         output_dir: Path,
-        config: Dict[str, Any],
         logging_dest: Path,
     ):
         """
