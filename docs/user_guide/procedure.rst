@@ -77,7 +77,7 @@ The `run_procedure` method is an abstract method that must be implemented by any
 
 .. code-block:: python
 
-    def run_procedure(self, input_dir: Path, output_dir: Path, logging_dest: Path):
+    def run_procedure(self, **kwargs):
         # Custom procedure implementation
 
 Creating a Custom Procedure
@@ -93,9 +93,12 @@ Example
     from src.yalab_procedures.procedures.procedure import Procedure
 
     class CustomProcedure(Procedure):
-        def run_procedure(self, input_dir, output_dir, logging_dest):
+        def run_procedure(self, **kwargs):
             self.logger.info("Running the custom procedure")
             # Custom procedure implementation here
+            input_dir = kwargs["input_dir"]
+            output_dir = kwargs["output_dir"]
+
 
     custom_procedure = CustomProcedure(
         input_directory="path/to/input",
