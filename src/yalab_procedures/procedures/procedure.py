@@ -1,5 +1,3 @@
-# src/yalab_procedures/procedures/procedure.py
-
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -43,26 +41,31 @@ class Procedure(BaseInterface):
         """
         Executes the interface, setting up logging and calling the procedure.
         """
-        input_dir = Path(self.inputs.input_directory)
-        output_dir = Path(self.inputs.output_directory)
-        logging_dir = (
-            Path(self.inputs.logging_directory)
-            if isdefined(self.inputs.logging_directory)
-            else output_dir
+        # Extract input attributes as a dictionary
+        input_attributes = self._get_inputs_as_kwargs()
+
+        # Validate directories and set up logging
+        input_attributes["input_directory"] = Path(input_attributes["input_directory"])
+        input_attributes["output_directory"] = Path(
+            input_attributes["output_directory"]
         )
-        logging_level = (
-            self.inputs.logging_level
-            if isdefined(self.inputs.logging_level)
-            else "INFO"
+        if "logging_directory" in input_attributes:
+            input_attributes["logging_directory"] = Path(
+                input_attributes["logging_directory"]
+            )
+        else:
+            input_attributes["logging_directory"] = input_attributes["output_directory"]
+
+        self.setup_logging(
+            input_attributes["logging_directory"], input_attributes["logging_level"]
         )
 
-        # Set up logging
-        self.setup_logging(logging_dir, logging_level)
-
-        self.logger.info(f"Running procedure with input directory: {input_dir}")
+        self.logger.info(
+            f"Running procedure with input directory: {input_attributes['input_directory']}"
+        )
 
         # Run the custom procedure
-        self.run_procedure(input_dir, output_dir, logging_dir)
+        self.run_procedure(**input_attributes)
 
         return runtime
 
@@ -98,13 +101,19 @@ class Procedure(BaseInterface):
 
         self.logger.debug(f"Logging setup complete. Log file: {log_file_path}")
 
-    def run_procedure(
-        self,
-        input_dir: Path,
-        output_dir: Path,
-        logging_dest: Path,
-    ):
+    def run_procedure(self, **kwargs):
         """
         This method should be implemented by subclasses to define the specific steps of the procedure.
         """
         raise NotImplementedError("Subclasses should implement this method")
+
+    def _get_inputs_as_kwargs(self) -> Dict[str, Any]:
+        """
+        Extracts defined inputs from the input spec as a dictionary of keyword arguments.
+        """
+        input_values = {
+            name: getattr(self.inputs, name)
+            for name in self.inputs.__dict__.keys()
+            if isdefined(getattr(self.inputs, name))
+        }
+        return input_values
