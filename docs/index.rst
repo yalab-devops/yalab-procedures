@@ -1,11 +1,8 @@
-Welcome to yalab-procedures's documentation!
-======================================
+.. include:: ../README.rst
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
 
-   readme
    installation
    user_guide/index
    api_reference/index
