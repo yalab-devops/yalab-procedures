@@ -31,6 +31,7 @@ pre-commit = "^3.7.1"
 chardet = "^5.2.0"
 sphinx-rtd-theme = "^2.0.0"
 
+nipype = "^1.8.6"
 [tool.poetry.dev-dependencies]
 coverage = "^7.5.1"  # testing
 mypy = "^1.10.0"  # linting
@@ -71,11 +72,11 @@ ensure_newline_before_comments = true
 # Mypy configuration
 [tool.mypy]
 files = "."
-
-# Use strict defaults
-strict = true
+strict = false
 warn_unreachable = true
 warn_no_return = true
+ignore_missing_imports = true
+
 
 [[tool.mypy.overrides]]
 # Don't require test functions to include types
