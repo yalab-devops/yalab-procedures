@@ -1,158 +1,153 @@
+# src/yalab_procedures/procedures/procedure.py
+
 import json
 import logging
-from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Dict, Union
+
+from nipype.interfaces.base import (
+    BaseInterface,
+    BaseInterfaceInputSpec,
+    Directory,
+    TraitedSpec,
+    isdefined,
+    traits,
+)
 
 
-class Procedure(ABC):
-    """
-    Abstract base class for procedures.
+class ProcedureInputSpec(BaseInterfaceInputSpec):
+    input_directory = Directory(exists=True, mandatory=True, desc="Input directory")
+    output_directory = Directory(mandatory=True, desc="Output directory")
+    config = traits.Either(
+        traits.Dict(traits.Str, traits.Any),
+        traits.File(exists=True),
+        mandatory=True,
+        desc="Configuration settings as a dictionary or a path to a JSON file",
+        usedefault=True,
+        default={},
+    )
+    logging_directory = Directory(desc="Logging directory")
+    logging_level = traits.Enum(
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL",
+        desc="Logging level",
+        usedefault=True,
+        default="INFO",
+    )
 
-    Parameters
-    ----------
-    input_directory : Union[str, Path]
-        The path to the input directory.
-    output_directory : Union[str, Path]
-        The path to the outputs directory.
-    config : Optional[Union[dict[str, str], str, Path]]
-        The configuration settings for the procedure.
-    logging_destination : Optional[Union[str, Path]]
-        The path to the logging directory.
-    logging_level : str
-        The logging level.
-    """
 
-    def __init__(
-        self,
-        input_directory: Union[str, Path],
-        output_directory: Union[str, Path],
-        config: Optional[Union[dict[str, str], str, Path]] = None,
-        logging_destination: Optional[Union[str, Path]] = None,
-        logging_level: str = "INFO",
-    ):
-        self.logging_destination = (
-            Path(logging_destination) if logging_destination else Path(output_directory)
+class ProcedureOutputSpec(TraitedSpec):
+    output_directory = Directory(desc="Output directory")
+
+
+class Procedure(BaseInterface):
+    input_spec = ProcedureInputSpec
+    output_spec = ProcedureOutputSpec
+    config_keys = [
+        "input_directory",
+        "output_directory",
+        "logging_directory",
+        "logging_level",
+    ]
+
+    def _run_interface(self, runtime) -> Any:
+        """
+        Executes the interface, setting up logging and calling the procedure.
+        """
+        config = self.load_config(self.inputs.config)
+        self.validate_and_set_inputs(config)
+
+        input_dir = Path(self.inputs.input_directory)
+        output_dir = Path(self.inputs.output_directory)
+        logging_dir = (
+            Path(self.inputs.logging_directory)
+            if isdefined(self.inputs.logging_directory)
+            else output_dir
         )
-        self.logging_level = logging_level
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self._setup_logging()
-        self.input_directory = self._validate_input_directory(input_directory)
-        self.config = self._load_config(config)
-        self.output_directory = self._setup_output_directory(output_directory)
-
-    @abstractmethod
-    def run(self) -> None:
-        """
-        Abstract method to run the procedure.
-        """
-        raise NotImplementedError(
-            "This is the abstract method for the Procedure class. It should be implemented in the child class."
+        logging_level = (
+            self.inputs.logging_level
+            if isdefined(self.inputs.logging_level)
+            else "INFO"
         )
 
-    def _validate_input_directory(self, input_directory: Union[Path, str]) -> Path:
+        # Set up logging
+        self.setup_logging(logging_dir, logging_level)
+
+        self.logger.info(f"Running procedure with input directory: {input_dir}")
+
+        # Run the custom procedure
+        self.run_procedure(input_dir, output_dir, config, logging_dir)
+
+        return runtime
+
+    def _list_outputs(self) -> Dict[str, str]:
         """
-        Validates the input directory.
-
-        Parameters
-        ----------
-        input_directory : Union[Path, str]
-            The input directory to validate.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the input directory does not exists.
-
-        Returns
-        -------
-        Path
-            The input directory as a Path object.
+        Lists the outputs of the procedure.
         """
-        input_directory = Path(input_directory)
-        if input_directory.is_dir():
-            return input_directory
-        else:
-            raise FileNotFoundError(f"Input directory {input_directory} not found.")
+        outputs = self._outputs().get()
+        outputs["output_directory"] = str(self.inputs.output_directory)
+        return outputs
 
-    def _setup_output_directory(self, output_directory: Union[str, Path]) -> Path:
+    def setup_logging(self, logging_dir: Path, logging_level: str):
         """
-        Sets up the output directory.
+        Sets up logging configuration.
+        """
+        # Reset logging configuration
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
 
-        Parameters
-        ----------
-        output_directory : Union[str, Path]
-            The output directory to set up.
+        if not logging_dir.exists():
+            logging_dir.mkdir(parents=True, exist_ok=True)
 
-        Returns
-        -------
-        Path
-            The output directory as a Path object.
-        """
-        output_directory = Path(output_directory)
-        if output_directory.is_dir():
-            self.log(f"Output directory {output_directory} already exists.")
-        else:
-            output_directory.mkdir(parents=True, exist_ok=True)
-            self.log(f"Output directory {output_directory} created.")
-        return output_directory
-
-    def _setup_logging(self) -> None:
-        """
-        Sets up the logging for the procedure.
-        """
-        handler: logging.Handler
-        self.logging_destination.mkdir(
-            parents=True, exist_ok=True
-        )  # Ensure the logging directory exists
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_filename = f"{self.__class__.__name__}_{timestamp}.log"
-        log_file_path = self.logging_destination / log_filename
-        handler = logging.FileHandler(log_file_path)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        log_file_path = logging_dir / log_filename
+
+        logging.basicConfig(
+            filename=log_file_path,
+            level=getattr(logging, logging_level),
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-        self.logger.setLevel(getattr(logging, self.logging_level.upper(), "INFO"))
+        self.logger = logging.getLogger(self.__class__.__name__)
 
-    def log(self, message: str) -> None:
+        self.logger.debug(f"Logging setup complete. Log file: {log_file_path}")
+
+    def load_config(self, config: Union[Dict[str, Any], str]) -> Dict[str, Any]:
         """
-        Logs a message at the INFO level.
-
-        Parameters
-        ----------
-        message : str
-            The message to log.
-        """
-        self.logger.info(message)
-
-    def _load_config(
-        self, config: Union[dict[str, str], str, Path, None]
-    ) -> dict[str, str]:
-        """
-        Loads the configuration from a file or dictionary.
-
-        Parameters
-        ----------
-        config : Union[dict, str, Path, None]
-            Configuration settings or path to the configuration file.
-
-        Returns
-        -------
-        dict
-            The configuration dictionary.
+        Loads the configuration from a dictionary or a JSON file.
         """
         if isinstance(config, dict):
             return config
-        elif isinstance(config, (str, Path)):
-            config_path = Path(config)
-            if config_path.is_file():
-                try:
-                    with open(config_path, "r") as file:
-                        return dict(json.load(file))
-                except json.JSONDecodeError:
-                    self.log(f"Error decoding JSON from {config_path}")
-                    return {}
-        return {}
+        elif isinstance(config, str):
+            with open(config, "r") as f:
+                return json.load(f)
+        else:
+            raise ValueError(
+                "Config must be either a dictionary or a path to a JSON file."
+            )
+
+    def validate_and_set_inputs(self, config: Dict[str, Any]):
+        """
+        Validates the keys in the config and sets the inputs.
+        """
+        for key, value in config.items():
+            if key in self.config_keys:
+                setattr(self.inputs, key, value)
+            else:
+                raise ValueError(f"Invalid config key: {key}")
+
+    def run_procedure(
+        self,
+        input_dir: Path,
+        output_dir: Path,
+        config: Dict[str, Any],
+        logging_dest: Path,
+    ):
+        """
+        This method should be implemented by subclasses to define the specific steps of the procedure.
+        """
+        raise NotImplementedError("Subclasses should implement this method")
