@@ -31,6 +31,7 @@ class ProcedureInputSpec(BaseInterfaceInputSpec):
 
 class ProcedureOutputSpec(TraitedSpec):
     output_directory = Directory(desc="Output directory")
+    log_file = traits.File(desc="Log file")
 
 
 class Procedure(BaseInterface):
@@ -75,7 +76,15 @@ class Procedure(BaseInterface):
         """
         outputs = self._outputs().get()
         outputs["output_directory"] = str(self.inputs.output_directory)
+        outputs["log_file"] = self.log_file_path
         return outputs
+
+    def _gen_log_filename(self) -> str:
+        """
+        Generates a log filename based on the procedure name and the current timestamp.
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return f"{self.__class__.__name__}_{timestamp}.log"
 
     def setup_logging(self, logging_dir: Path, logging_level: str):
         """
@@ -88,10 +97,8 @@ class Procedure(BaseInterface):
         if not logging_dir.exists():
             logging_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_filename = f"{self.__class__.__name__}_{timestamp}.log"
-        log_file_path = logging_dir / log_filename
-
+        log_file_path = logging_dir / self._gen_log_filename()
+        self.log_file_path = log_file_path
         logging.basicConfig(
             filename=log_file_path,
             level=getattr(logging, logging_level),

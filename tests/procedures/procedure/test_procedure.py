@@ -52,13 +52,14 @@ def test_logging_setup(temp_dir):
     }
 
     procedure = MockProcedure(**config)
-    procedure.run()
+    res = procedure.run()
 
     log_files = list(log_dir.glob("*.log"))
     assert len(log_files) == 1
     with open(log_files[0], "r") as log_file:
         log_content = log_file.read()
         assert "Running the mock procedure" in log_content
+    assert res.outputs.log_file == str(log_files[0])
 
 
 def test_naive_procedure(temp_dir):
