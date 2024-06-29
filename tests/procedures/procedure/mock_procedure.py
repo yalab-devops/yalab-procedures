@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from src.yalab_procedures.procedures.procedure import Procedure
+from src.yalab_procedures.procedures import Procedure
 
 
 class MockProcedure(Procedure):

@@ -32,6 +32,8 @@ chardet = "^5.2.0"
 sphinx-rtd-theme = "^2.0.0"
 
 nipype = "^1.8.6"
+pydicom = "^2.4.4"
+bids-validator = "^1.14.6"
 [tool.poetry.dev-dependencies]
 coverage = "^7.5.1"  # testing
 mypy = "^1.10.0"  # linting

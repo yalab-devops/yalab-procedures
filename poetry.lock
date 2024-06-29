@@ -70,6 +70,17 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "rst.linker (>=1.9)", "sphinx (>=3.5
 testing = ["jaraco.test", "pytest (!=8.0.*)", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)"]
 
 [[package]]
+name = "bids-validator"
+version = "1.14.6"
+description = "Validator for the Brain Imaging Data Structure"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "bids_validator-1.14.6-py3-none-any.whl", hash = "sha256:e7194193d97bedc6fb173b8606f6d3ed5a467c141f01bca11cd0f38ad1717941"},
+    {file = "bids_validator-1.14.6.tar.gz", hash = "sha256:df2b6b5d1aaad61d34ccad0494f2ed73ce3082825ada31954c4e14c2538d485c"},
+]
+
+[[package]]
 name = "black"
 version = "24.4.2"
 description = "The uncompromising code formatter."
@@ -1773,6 +1784,20 @@ files = [
 ]
 
 [[package]]
+name = "pydicom"
+version = "2.4.4"
+description = "A pure Python package for reading and writing DICOM data"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pydicom-2.4.4-py3-none-any.whl", hash = "sha256:f9f8e19b78525be57aa6384484298833e4d06ac1d6226c79459131ddb0bd7c42"},
+    {file = "pydicom-2.4.4.tar.gz", hash = "sha256:90b4801d851ce65be3df520e16bbfa3d6c767cf2a3a3b1c18f6780e6b670b87a"},
+]
+
+[package.extras]
+docs = ["matplotlib", "numpy", "numpydoc", "pillow", "sphinx", "sphinx-copybutton", "sphinx-gallery", "sphinx_rtd_theme", "sphinxcontrib-napoleon"]
+
+[[package]]
 name = "pydot"
 version = "2.0.0"
 description = "Python interface to Graphviz's Dot"
@@ -2841,4 +2866,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "c22bb4284ef305d0b5bd8072bb5dc2956fc43b4512f60838490e868b12f95786"
+content-hash = "488eb791092c0a64c23e280b332da36a346a05256522120365b0651ccd86a5fc"
