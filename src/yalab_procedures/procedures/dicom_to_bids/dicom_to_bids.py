@@ -10,10 +10,14 @@ from nipype.interfaces.base import (
     traits,
 )
 
-from yalab_procedures.procedures.base.procedure import Procedure, ProcedureOutputSpec
+from yalab_procedures.procedures.base.procedure import (
+    Procedure,
+    ProcedureInputSpec,
+    ProcedureOutputSpec,
+)
 
 
-class DicomToBidsInputSpec(CommandLineInputSpec):
+class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     subject_id = traits.Str(argstr="-s %s", mandatory=True, desc="Subject ID")
     session_id = traits.Str(argstr="-ss %s", desc="Session ID")
     heuristic_file = File(
@@ -30,16 +34,6 @@ class DicomToBidsInputSpec(CommandLineInputSpec):
         mandatory=True,
         argstr="-o %s",
         desc="Directory to store BIDS output",
-    )
-    logging_directory = Directory(exists=True, desc="Directory to store logs")
-    logging_level = traits.Enum(
-        "DEBUG",
-        "INFO",
-        "WARNING",
-        "ERROR",
-        "CRITICAL",
-        default="INFO",
-        desc="Logging level",
     )
     converter = traits.Enum(
         "dcm2niix",

@@ -35,6 +35,7 @@ nipype = "^1.8.6"
 pydicom = "^2.4.4"
 bids-validator = "^1.14.6"
 heudiconv = "^1.1.6"
+pytest-mock = "^3.14.0"
 [tool.poetry.dev-dependencies]
 coverage = "^7.5.1"  # testing
 mypy = "^1.10.0"  # linting
