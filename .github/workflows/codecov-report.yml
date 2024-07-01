@@ -27,7 +27,7 @@ jobs:
         echo "Checking root directory contents..."
         ls -alh
         echo "Checking package directory contents..."
-        ls -alh <your_package>  # Replace <your_package> with your package directory
+        ls -alh .  # Replace <your_package> with your package directory
 
     - name: Run tests and collect coverage
       run: |
