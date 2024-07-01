@@ -40,8 +40,6 @@ class Procedure(BaseInterface):
 
     def __init__(self, **inputs: Any):
         super().__init__(**inputs)
-        self.logger = None
-        self.log_file_path = None
 
         # Validate directories and set up logging
         if not isdefined(self.inputs.logging_directory):
