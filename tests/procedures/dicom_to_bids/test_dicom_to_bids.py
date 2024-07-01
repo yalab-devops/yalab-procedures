@@ -130,7 +130,3 @@ def test_logging_setup(mock_run, dicom_to_bids_procedure):
     with open(log_files[0], "r") as log_file:
         log_content = log_file.read()
         assert "Running DicomToBidsProcedure" in log_content
-
-
-if __name__ == "__main__":
-    pytest.main()
