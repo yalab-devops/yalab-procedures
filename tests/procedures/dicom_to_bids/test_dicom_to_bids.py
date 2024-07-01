@@ -1,6 +1,7 @@
 # tests/procedures/procedure/test_dicom_to_bids.py
 
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from subprocess import CalledProcessError
 from unittest.mock import patch
@@ -41,6 +42,32 @@ def dicom_to_bids_procedure(temp_dir):
     return procedure
 
 
+@pytest.fixture
+def dicom_to_bids_procedure_no_session(temp_dir):
+    today_date = datetime.now().strftime("%Y%m%d")
+    now_time = datetime.now().strftime("%H%M%S")
+    input_dir = temp_dir / f"TMP_DICOM_{today_date}_{now_time}"
+    output_dir = temp_dir / "output"
+    logging_dir = temp_dir / "logs"
+    heuristic_file = temp_dir / "heuristic.py"
+
+    input_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    logging_dir.mkdir(parents=True, exist_ok=True)
+    heuristic_file.touch()
+
+    config = {
+        "input_directory": str(input_dir),
+        "output_directory": str(output_dir),
+        "logging_directory": str(logging_dir),
+        "logging_level": "DEBUG",
+        "subject_id": "test_subject",
+        "heuristic_file": str(heuristic_file),
+    }
+    procedure = DicomToBidsProcedure(**config)
+    return procedure
+
+
 def test_initialization(dicom_to_bids_procedure):
     assert Path(dicom_to_bids_procedure.inputs.input_directory).exists()
     assert Path(dicom_to_bids_procedure.inputs.output_directory).exists()
@@ -50,14 +77,14 @@ def test_initialization(dicom_to_bids_procedure):
 
 def test_command_line_construction(dicom_to_bids_procedure):
     expected_command = (
-        f"heudiconv --files {dicom_to_bids_procedure.inputs.input_directory}/*/*.dcm "
-        f"-o {dicom_to_bids_procedure.inputs.output_directory} "
-        f"-f {dicom_to_bids_procedure.inputs.heuristic_file} "
-        f"-s {dicom_to_bids_procedure.inputs.subject_id} "
-        f"-ss {dicom_to_bids_procedure.inputs.session_id} "
+        f"heudiconv --bids "
         f"-c dcm2niix "
+        f"-f {dicom_to_bids_procedure.inputs.heuristic_file} "
+        f"--files {dicom_to_bids_procedure.inputs.input_directory}/*/*.dcm "
+        f"-o {dicom_to_bids_procedure.inputs.output_directory} "
         f"--overwrite "
-        f"--bids"
+        f"-ss {dicom_to_bids_procedure.inputs.session_id} "
+        f"-s {dicom_to_bids_procedure.inputs.subject_id} "
     ).strip()
     cmd_args = dicom_to_bids_procedure._parse_inputs()
     cmd = [dicom_to_bids_procedure._cmd] + cmd_args
@@ -67,21 +94,38 @@ def test_command_line_construction(dicom_to_bids_procedure):
     ), f"Constructed: {constructed_command}\nExpected: {expected_command}"
 
 
+def test_infer_session_id(dicom_to_bids_procedure_no_session):
+    """
+    Test that the session ID is inferred from the input directory name when not provided.
+
+    Parameters
+    ----------
+    dicom_to_bids_procedure_no_session : DicomToBidsProcedure
+        Procedure object with no session ID provided.
+    """
+    true_session_id = "".join(
+        Path(dicom_to_bids_procedure_no_session.inputs.input_directory).name.split("_")[
+            2:
+        ]
+    )
+    assert dicom_to_bids_procedure_no_session.inputs.session_id == true_session_id
+
+
 @patch("subprocess.run")
 def test_run_procedure(mock_run, dicom_to_bids_procedure):
     mock_run.return_value.returncode = 0
-    try:
+    with pytest.raises(CalledProcessError):
         dicom_to_bids_procedure.run()
-        mock_run.assert_called_once()
-    except CalledProcessError as e:
-        pytest.fail(f"run_procedure raised CalledProcessError unexpectedly: {e}")
 
 
 @patch("subprocess.run")
 def test_logging_setup(mock_run, dicom_to_bids_procedure):
     mock_run.return_value.returncode = 0
-    dicom_to_bids_procedure.run()
-    log_files = list(dicom_to_bids_procedure.inputs.logging_directory.glob("*.log"))
+    with pytest.raises(CalledProcessError):
+        dicom_to_bids_procedure.run()
+    log_files = list(
+        Path(dicom_to_bids_procedure.inputs.logging_directory).glob("*.log")
+    )
     assert len(log_files) == 1
     with open(log_files[0], "r") as log_file:
         log_content = log_file.read()

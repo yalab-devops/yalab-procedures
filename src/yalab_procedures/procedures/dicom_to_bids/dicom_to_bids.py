@@ -1,5 +1,6 @@
 # src/yalab_procedures/procedures/dicom_to_bids.py
 
+from pathlib import Path
 from subprocess import CalledProcessError, run
 
 from nipype.interfaces.base import (
@@ -7,6 +8,7 @@ from nipype.interfaces.base import (
     CommandLineInputSpec,
     Directory,
     File,
+    isdefined,
     traits,
 )
 
@@ -48,6 +50,11 @@ class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     bids = traits.Bool(
         True, usedefault=True, argstr="--bids", desc="Organize output in BIDS format"
     )
+    infer_session_id = traits.Bool(
+        True,
+        usedefault=True,
+        desc="Infer session ID from DICOM directory name",
+    )
 
 
 class DicomToBidsOutputSpec(ProcedureOutputSpec):
@@ -61,6 +68,7 @@ class DicomToBidsProcedure(Procedure, CommandLine):
 
     def __init__(self, **inputs):
         super(DicomToBidsProcedure, self).__init__(**inputs)
+        self.infer_session_id()
 
     def run_procedure(self, **kwargs):
         try:
@@ -74,6 +82,16 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         except CalledProcessError as e:
             self.logger.error(f"Error running DicomToBidsProcedure: {e}")
             raise
+
+    def infer_session_id(self):
+        """
+        Infer the session ID from the input directory name.
+        This is useful for DICOM directories provided by TAU's MRI facility.
+        """
+        if not isdefined(self.inputs.session_id) and self.inputs.infer_session_id:
+            session_id = Path(self.inputs.input_directory).name.split("_")[-2:]
+            session_id = "".join(session_id)
+            self.inputs.session_id = session_id
 
     def run_commandline(self):
         # Build the command line arguments
@@ -97,7 +115,7 @@ class DicomToBidsProcedure(Procedure, CommandLine):
 
 if __name__ == "__main__":
     custom_procedure = DicomToBidsProcedure(
-        input_directory="/media/groot/Minerva/ya_shared/YA_lab_Yaniv_003006_20210803_1408",
+        input_directory="/media/groot/Minerva/ya_shared/YA_lab_Yaniv_General_20240609_1801",
         output_directory="/media/groot/Minerva/ya_shared/output_tmp/",
         logging_directory="/media/groot/Minerva/ya_shared/output_tmp/",
         logging_level="DEBUG",
