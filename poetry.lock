@@ -521,6 +521,26 @@ test = ["certifi", "pretend", "pytest (>=6.2.0)", "pytest-benchmark", "pytest-co
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "dcmstack"
+version = "0.9.0"
+description = "Stack DICOM images into volumes and convert to Nifti"
+optional = false
+python-versions = ">=2.7"
+files = [
+    {file = "dcmstack-0.9.0-py3-none-any.whl", hash = "sha256:e16eca79ea1d4be8d5397d50a4189fb4ac2ef8b193447080e217df92c495ebd9"},
+    {file = "dcmstack-0.9.0.tar.gz", hash = "sha256:9e131226fb00cdc72f5c2ad61f82b37020d3f97f272d1becb880168bd4504860"},
+]
+
+[package.dependencies]
+nibabel = ">=2.5.1"
+pydicom = ">=0.9.7"
+pylibjpeg-libjpeg = {version = "*", markers = "python_version >= \"3.7\""}
+
+[package.extras]
+doc = ["numpydoc", "sphinx"]
+test = ["pytest", "pytest (<=4.6)", "pytest-cov"]
+
+[[package]]
 name = "debugpy"
 version = "1.8.2"
 description = "An implementation of the Debug Adapter Protocol for Python"
@@ -663,6 +683,31 @@ files = [
 mccabe = ">=0.7.0,<0.8.0"
 pycodestyle = ">=2.12.0,<2.13.0"
 pyflakes = ">=3.2.0,<3.3.0"
+
+[[package]]
+name = "heudiconv"
+version = "1.1.6"
+description = "Heuristic DICOM Converter"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "heudiconv-1.1.6-py3-none-any.whl", hash = "sha256:e9424c0df96dcba0433ea0f24698ac65450d9b0e2b82f947bd3eccd4d984c119"},
+    {file = "heudiconv-1.1.6.tar.gz", hash = "sha256:8421c6e73a68131e30ec9abce36456c0cb6c9f936c90fabf59a869e2778eba7e"},
+]
+
+[package.dependencies]
+dcmstack = ">=0.8"
+etelemetry = "*"
+filelock = ">=3.0.12"
+nibabel = "*"
+nipype = ">=1.2.3"
+pydicom = ">=1.0.0"
+
+[package.extras]
+all = ["datalad (>=0.13.0)", "duecredit", "inotify", "pytest", "tinydb"]
+datalad = ["datalad (>=0.13.0)"]
+extras = ["duecredit"]
+tests = ["inotify", "pytest", "tinydb"]
 
 [[package]]
 name = "identify"
@@ -1842,6 +1887,49 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
+name = "pylibjpeg-libjpeg"
+version = "2.2.0"
+description = "A Python wrapper for libjpeg, with a focus on use as a plugin for for pylibjpeg"
+optional = false
+python-versions = "<4.0,>=3.8"
+files = [
+    {file = "pylibjpeg_libjpeg-2.2.0-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:84b1c7767b86993339d051321fc27a72753d37fb335b66a5d1c6a84f7adfda80"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:020121ed7ef98cd63cba9d0dcc913f105ce5cbcd43ff2a1a5e64d4aed1158033"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:93f156a2f0a79e765182c87fd056b28678b9d8b53af64d5c189e59f58efd7920"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9647254f4fb884bbe8c42fd136276890c052419a7049c4861763c96eab99de13"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp310-cp310-win32.whl", hash = "sha256:9b78ad3efd58d5bf9dda6ad493c4a0fa07b3dd070d5ae7a7f0e5bdd53cadad8d"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp310-cp310-win_amd64.whl", hash = "sha256:3af59ce9d91e6e2cac115e1348b165d1f130dfceef64ea8bb5d181b427c4580a"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp311-cp311-macosx_12_0_x86_64.whl", hash = "sha256:82f6503f4a9dce3cc920c871c98dcaf144687e1ff7cf0d8ece0804ecef700682"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:2188edd971695848adc1521fd0e55f382780914b97cbe995f3bed6e7e6d50536"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8ce1d6a8c65bc75f3b12581e0aadfe17d7751dbebc655638ec53d4056db41c3c"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5b8a875b25d8278b1c2f7a34fa3154e23c06b6e5835d007f80efb8dfa549cf8e"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp311-cp311-win32.whl", hash = "sha256:6be673f9845a879f51991e09d98e6491a373a252485d7c63413e27cb138b0f98"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp311-cp311-win_amd64.whl", hash = "sha256:60df7567b1875f36fec1019910e0d92e627134663991d79f5999c1f617dcee9d"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:f749dabb5b90a91ae4b65cc115285072d04761c45777d915e07648aaf83d1ee6"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:7fe96435151462d149fc9c0d3842b2ff6529592493356fec6bbbd5ad7dc0b63b"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5df50e8d7eb08558e91ad42d64ad2e3949b5610b8e193e7fe579c236b14a1755"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d826ed2b79a9dd42d14cb521a02720d9ca3a77c98745096b2c01e75ad39ea599"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp312-cp312-win32.whl", hash = "sha256:b714cf7e279a318b3535b063d6537f62334e4d13a0571ed6bee254129a9d75cf"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp312-cp312-win_amd64.whl", hash = "sha256:fc2dfdff7e2ca04850c7e7fe8134e36b58ebdfef61b5144e1b6676cd04a42841"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp38-cp38-macosx_12_0_x86_64.whl", hash = "sha256:901ba8c2dddcd2b28597d6bc58928612058b826a7d2a4b05e1850eea59ea4687"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp38-cp38-macosx_14_0_x86_64.whl", hash = "sha256:2bf2975b6fe1ff654248bf1bb5953b4b0f568af482c590b2df546f356319c7ad"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e81f811be510a7d4278e2a48a7225732a2dba35149967c6ed5cdef5efbfcb8f2"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b7839a6376f9d293c42e79597400290496567a2504d7c95280fe2b8bf0d994ed"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp38-cp38-win32.whl", hash = "sha256:dbf5722bc4e8866448864a6c7855fd75b697fb34644bcde17ff9e2bffb05e023"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:17e78b35791c5056c6d6b6470fb770cb9d5becdd29698b7a0bd6cc438a4a3575"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp39-cp39-macosx_12_0_x86_64.whl", hash = "sha256:7180557325c64df066e1fcbf4c8ab6a23e49bb37b91e7fa4cfed24da9f99d58a"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp39-cp39-macosx_14_0_arm64.whl", hash = "sha256:2a476d31ecd13de14dbb0bee5abfb4d5850cc35af62638166d1c6858552ff3cf"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e4459adc0fa511ce598b1da24564cfe38b76f28f1f9e081b2a62b6466f8e110a"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4cb80d164d0fe1f69b7daa0959149df5b956cfe49bc16d4c051c5481e330badd"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp39-cp39-win32.whl", hash = "sha256:40c86b7821e3c38a02119bc334d0b454f30377f828777b0fa868a43ae544409c"},
+    {file = "pylibjpeg_libjpeg-2.2.0-cp39-cp39-win_amd64.whl", hash = "sha256:432fa36110b7d961adc8707379a2e4b886427f4c7fff4156807a519ffb0a5798"},
+    {file = "pylibjpeg_libjpeg-2.2.0.tar.gz", hash = "sha256:ad2eec82858baa2bf7765c1c0cf11901cc5f0ed60a98ee435723aaa4607adeb9"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "pyparsing"
 version = "3.1.2"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -1895,6 +1983,23 @@ tomli = {version = ">=1", markers = "python_version < \"3.11\""}
 
 [package.extras]
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+
+[[package]]
+name = "pytest-mock"
+version = "3.14.0"
+description = "Thin-wrapper around the mock package for easier use with pytest"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest-mock-3.14.0.tar.gz", hash = "sha256:2719255a1efeceadbc056d6bf3df3d1c5015530fb40cf347c0f9afac88410bd0"},
+    {file = "pytest_mock-3.14.0-py3-none-any.whl", hash = "sha256:0b72c38033392a5f4621342fe11e9219ac11ec9d375f8e2a0c164539e0d70f6f"},
+]
+
+[package.dependencies]
+pytest = ">=6.2.5"
+
+[package.extras]
+dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
 name = "python-dateutil"
@@ -2866,4 +2971,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "488eb791092c0a64c23e280b332da36a346a05256522120365b0651ccd86a5fc"
+content-hash = "e638a584fecf00812bcb53d33b0563c954d2abb251618aaeb58bf7e8376c58eb"
