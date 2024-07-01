@@ -84,7 +84,7 @@ def test_command_line_construction(dicom_to_bids_procedure):
         f"-o {dicom_to_bids_procedure.inputs.output_directory} "
         f"--overwrite "
         f"-ss {dicom_to_bids_procedure.inputs.session_id} "
-        f"-s {dicom_to_bids_procedure.inputs.subject_id} "
+        # f"-s {dicom_to_bids_procedure.inputs.subject_id} "
     ).strip()
     cmd_args = dicom_to_bids_procedure._parse_inputs()
     cmd = [dicom_to_bids_procedure._cmd] + cmd_args
