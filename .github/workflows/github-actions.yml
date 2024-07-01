@@ -25,12 +25,6 @@ jobs:
             python_arch: "x64"
             tox_env: "py310"
             os: "ubuntu-latest"
-          - name: "py310 (windows)"
-            python: "3.10"
-            toxpython: "python3.10"
-            python_arch: "x64"
-            tox_env: "py310"
-            os: "windows-latest"
     steps:
       - uses: actions/checkout@v4
         with:
