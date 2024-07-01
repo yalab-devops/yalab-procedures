@@ -24,15 +24,17 @@ jobs:
 
     - name: Run tests and collect coverage
       run: |
-        pytest --cov=. --cov-report=xml --cov-report=term-missing  # Run tests and generate coverage reports
+        mkdir -p reports  # Create a directory to store the coverage reports
+        pytest --cov-report xml:reports/coverage.xml --cov=. tests/  # Run tests and generate coverage reports
 
     - name: Check coverage file
       run: |
-        cat coverage.xml  # Check the coverage file to ensure it exists and contains coverage data
+        cat reports/coverage.xml  # Check the coverage file to ensure it exists and contains coverage data
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4.2.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}  # Ensure your CODECOV_TOKEN is set in GitHub Secrets
+        file: reports/coverage.xml  # Specify the path to the coverage file
         name: codecov-umbrella  # Optional: Name for the upload to distinguish it in the UI
         fail_ci_if_error: true  # Optional: Fail the CI if an error occurs during the upload
