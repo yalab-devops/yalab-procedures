@@ -78,17 +78,26 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         self.infer_session_id()
 
     def run_procedure(self, **kwargs):
-        try:
-            self.logger.info("Running DicomToBidsProcedure")
-            self.logger.debug(f"Input attributes: {kwargs}")
 
-            # Run the heudiconv command
-            self.run_commandline()
+        self.logger.info("Running DicomToBidsProcedure")
+        self.logger.debug(f"Input attributes: {kwargs}")
 
-            self.logger.info("Finished running DicomToBidsProcedure")
-        except CalledProcessError as e:
-            self.logger.error(f"Error running DicomToBidsProcedure: {e}")
-            raise
+        # Run the heudiconv command
+        command = self.build_commandline()
+        result = run(
+            command,
+            shell=True,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.logger.info(result.stdout)
+        if result.stderr:
+            self.logger.error(result.stderr)
+            raise CalledProcessError(
+                result.returncode, command, output=result.stdout, stderr=result.stderr
+            )
+        self.logger.info("Finished running DicomToBidsProcedure")
 
     def infer_session_id(self):
         """
@@ -100,19 +109,13 @@ class DicomToBidsProcedure(Procedure, CommandLine):
             session_id = "".join(session_id)
             self.inputs.session_id = session_id
 
-    def run_commandline(self):
+    def build_commandline(self):
         # Build the command line arguments
         cmd_args = self._parse_inputs()
         cmd = [self._cmd] + cmd_args
         self.logger.debug(f"Command line: {' '.join(cmd)}")
-
         # Run the command
-        result = run(
-            " ".join(cmd), shell=True, check=True, capture_output=True, text=True
-        )
-        self.logger.info(result.stdout)
-        if result.stderr:
-            self.logger.error(result.stderr)
+        return " ".join(cmd)
 
     def _list_outputs(self):
         outputs = self._outputs().get()

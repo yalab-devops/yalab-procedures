@@ -124,3 +124,15 @@ def test_logging_setup(mock_run, dicom_to_bids_procedure):
     with open(log_files[0], "r") as log_file:
         log_content = log_file.read()
         assert "Running DicomToBidsProcedure" in log_content
+
+
+@patch("subprocess.run")
+def test_logger_contains_error(mock_run, dicom_to_bids_procedure):
+    mock_run.return_value.returncode = 1
+    mock_run._cmd = "wrong_command"
+    with pytest.raises(CalledProcessError):
+        dicom_to_bids_procedure.run()
+    log_files = list(
+        Path(dicom_to_bids_procedure.inputs.logging_directory).glob("*.log")
+    )
+    assert len(log_files) == 1
