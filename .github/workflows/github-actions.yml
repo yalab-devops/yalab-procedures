@@ -36,20 +36,23 @@ jobs:
       - name: install dependencies
         run: |
           python -mpip install --progress-bar=off .
-          pip --version
-          tox --version
-          pip list --format=freeze
+          pip install tox
+          pip install pytest-cov
       - name: run tests with coverage
         env:
           TOXPYTHON: "${{ matrix.toxpython }}"
         run: |
           tox -e ${{ matrix.tox_env }} -- --cov=.
+      - name: generate coverage report
+        if: matrix.name == 'py310 (ubuntu)'
+        run: |
+          pytest --cov=./ --cov-report xml:coverage.xml
       - name: upload coverage report
-        if: always() && matrix.name == 'py310 (ubuntu)'
+        if: matrix.name == 'py310 (ubuntu)'
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
-          path: ./path/to/coverage/report  # Adjust the path to your coverage report
+          path: coverage.xml
 
   upload-coverage:
     name: Upload coverage to Codecov
@@ -63,10 +66,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage-report
-          path: ./path/to/coverage/report  # Adjust the path to where you want to download the report
+          path: .
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.2.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}  # Ensure your CODECOV_TOKEN is set in GitHub Secrets
-          files: ./path/to/coverage/report  # Adjust the path to your coverage report
+          files: coverage.xml
           name: codecov-umbrella  # Optional: Name for the upload to distinguish it in the UI
