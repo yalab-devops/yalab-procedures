@@ -118,16 +118,3 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         outputs = self._outputs().get()
         outputs["bids_directory"] = str(self.inputs.output_directory)
         return outputs
-
-
-if __name__ == "__main__":
-    custom_procedure = DicomToBidsProcedure(
-        input_directory="/media/groot/Minerva/ya_shared/YA_lab_Yaniv_General_20240609_1801",
-        output_directory="/media/groot/Minerva/ya_shared/output_tmp/",
-        logging_directory="/media/groot/Minerva/ya_shared/output_tmp/",
-        logging_level="DEBUG",
-        subject_id="003006",
-        session_id="01",  # if applicable
-        heuristic_file="/home/groot/Projects/yalab-dev/yalab_procedures/src/yalab_procedures/procedures/dicom_to_bids/templates/heuristic.py",
-    )
-    custom_procedure.run()
