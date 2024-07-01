@@ -22,9 +22,21 @@ jobs:
         pip install pytest pytest-cov  # Install pytest and pytest-cov to generate coverage reports
         pip install .  # Install your package
 
+    - name: Check directory contents
+      run: |
+        echo "Checking root directory contents..."
+        ls -alh
+        echo "Checking package directory contents..."
+        ls -alh <your_package>  # Replace <your_package> with your package directory
+
     - name: Run tests and collect coverage
       run: |
-        pytest --cov=yalab_procedures --cov-report=xml --cov-report=term-missing
+        pytest --cov=<your_package> --cov-report=xml --cov-report=term-missing  # Replace <your_package> with your package directory
+
+    - name: Check coverage report
+      run: |
+        echo "Checking coverage report..."
+        cat coverage.xml
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4.2.0
