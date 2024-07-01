@@ -22,12 +22,10 @@ def dicom_to_bids_procedure(temp_dir):
     input_dir = temp_dir / "input"
     output_dir = temp_dir / "output"
     logging_dir = temp_dir / "logs"
-    heuristic_file = temp_dir / "heuristic.py"
 
     input_dir.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
     logging_dir.mkdir(parents=True, exist_ok=True)
-    heuristic_file.touch()
 
     config = {
         "input_directory": str(input_dir),
@@ -36,7 +34,6 @@ def dicom_to_bids_procedure(temp_dir):
         "logging_level": "DEBUG",
         "subject_id": "test_subject",
         "session_id": "01",
-        "heuristic_file": str(heuristic_file),
     }
     procedure = DicomToBidsProcedure(**config)
     return procedure
@@ -49,12 +46,10 @@ def dicom_to_bids_procedure_no_session(temp_dir):
     input_dir = temp_dir / f"TMP_DICOM_{today_date}_{now_time}"
     output_dir = temp_dir / "output"
     logging_dir = temp_dir / "logs"
-    heuristic_file = temp_dir / "heuristic.py"
 
     input_dir.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
     logging_dir.mkdir(parents=True, exist_ok=True)
-    heuristic_file.touch()
 
     config = {
         "input_directory": str(input_dir),
@@ -62,7 +57,6 @@ def dicom_to_bids_procedure_no_session(temp_dir):
         "logging_directory": str(logging_dir),
         "logging_level": "DEBUG",
         "subject_id": "test_subject",
-        "heuristic_file": str(heuristic_file),
     }
     procedure = DicomToBidsProcedure(**config)
     return procedure
