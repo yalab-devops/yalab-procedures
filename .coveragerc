@@ -1,5 +1,0 @@
-# .coveragerc
-[run]
-omit =
-    tests/*
-    tests/procedure/*
