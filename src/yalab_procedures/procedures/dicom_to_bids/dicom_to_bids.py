@@ -18,12 +18,19 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureOutputSpec,
 )
 
+DEFAULT_HEURISTIC = Path(__file__).parent / "templates" / "heuristic.py"
+
 
 class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     subject_id = traits.Str(argstr="-s %s", mandatory=True, desc="Subject ID")
     session_id = traits.Str(argstr="-ss %s", desc="Session ID")
     heuristic_file = File(
-        exists=True, mandatory=True, argstr="-f %s", desc="Heuristic file"
+        DEFAULT_HEURISTIC,
+        exists=True,
+        mandatory=False,
+        argstr="-f %s",
+        desc="Heuristic file",
+        usedefault=True,
     )
     input_directory = Directory(
         exists=True,
