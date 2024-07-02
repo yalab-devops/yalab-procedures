@@ -1,6 +1,8 @@
-from nipype.interfaces.base import Directory, traits
+from nipype import Workflow
+from nipype.interfaces.base import Directory, isdefined, traits
 
 from yalab_procedures.procedures.base.procedure import (
+    Procedure,
     ProcedureInputSpec,
     ProcedureOutputSpec,
 )
@@ -14,10 +16,10 @@ class MrtrixPreprocessingInputSpec(ProcedureInputSpec):
     input_directory = Directory(
         exists=True,
         mandatory=True,
-        desc="BIDS-appropriate input directory containing DWI files",
+        desc="BIDS-appropriate input directory.",
     )
-    subject_id = traits.Str(mandatory=False, desc="Subject ID")
-    session_id = traits.Str(mandatory=False, desc="Session ID")
+    subject_id = traits.Str(mandatory=True, desc="Subject ID")
+    session_id = traits.Str(mandatory=True, desc="Session ID")
     minvol = traits.Int(
         259209,
         usedefault=True,
@@ -60,6 +62,11 @@ class MrtrixPreprocessingInputSpec(ProcedureInputSpec):
         mandatory=True,
         desc="Output directory",
     )
+    work_directory = Directory(
+        exists=False,
+        mandatory=True,
+        desc="Working directory",
+    )
 
 
 class MrtrixPreprocessingOutputSpec(ProcedureOutputSpec):
@@ -68,3 +75,21 @@ class MrtrixPreprocessingOutputSpec(ProcedureOutputSpec):
     """
 
     output_directory = Directory(desc="Output directory")
+
+
+class MrtrixPreprocessingProcedure(Procedure):
+    """
+    Procedure to preprocess DWI data using MRtrix3
+    """
+
+    input_spec = MrtrixPreprocessingInputSpec
+    output_spec = MrtrixPreprocessingOutputSpec
+
+    def initiate_workflow(self):
+        wf = Workflow(name=self._gen_wf_name())
+        if isdefined(self.inputs.work_directory):
+            wf.base_dir = self.inputs.work_directory
+        return wf
+
+    def _gen_wf_name(self):
+        return f"mrtrix_preprocessing_sub-{self.inputs.subject_id}_ses-{self.inputs.session_id}"
