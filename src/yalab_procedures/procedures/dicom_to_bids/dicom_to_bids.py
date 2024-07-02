@@ -22,6 +22,10 @@ DEFAULT_HEURISTIC = Path(__file__).parent / "templates" / "heuristic.py"
 
 
 class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
+    """
+    Input specification for the DicomToBidsProcedure
+    """
+
     subject_id = traits.Str(argstr="-s %s", mandatory=True, desc="Subject ID")
     session_id = traits.Str(argstr="-ss %s", desc="Session ID")
     heuristic_file = File(
@@ -65,6 +69,10 @@ class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
 
 
 class DicomToBidsOutputSpec(ProcedureOutputSpec):
+    """
+    Output specification for the DicomToBidsProcedure
+    """
+
     bids_directory = Directory(desc="Output BIDS directory")
 
 
