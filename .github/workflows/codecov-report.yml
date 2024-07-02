@@ -22,6 +22,10 @@ jobs:
         pip install pytest pytest-cov
         pip install .  # Install your package
 
+    - name: Set PYTHONPATH
+      run: |
+        echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
+
     - name: Verify directory structure
       run: |
         echo "Verifying directory structure:"
