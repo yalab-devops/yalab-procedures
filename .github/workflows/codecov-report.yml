@@ -29,7 +29,13 @@ jobs:
     - name: Run tests and collect coverage
       run: |
         mkdir -p reports
-        pytest --cov-report xml:reports/coverage.xml --cov=. tests/ --verbose
+        pytest --cov-report xml:reports/coverage.xml --cov-report html:reports/htmlcov --cov=src/yalab_procedures tests/ --verbose
+
+    - name: Upload HTML coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: reports/htmlcov
 
     - name: Check coverage file
       run: |

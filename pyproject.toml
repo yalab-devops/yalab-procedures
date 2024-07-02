@@ -37,9 +37,9 @@ bids-validator = "^1.14.6"
 heudiconv = "^1.1.6"
 pytest-mock = "^3.14.0"
 [tool.poetry.dev-dependencies]
-coverage = "^7.5.1"  # testing
+coverage = "^7.5.4"  # testing
 mypy = "^1.10.0"  # linting
-pytest = "^8.2.1"  # testing
+pytest = "^8.2.2"  # testing
 ruff = "^0.4.4"  # linting
 black = "^24.4.2"
 flake8 = "^7.0"
@@ -81,9 +81,14 @@ warn_unreachable = true
 warn_no_return = true
 ignore_missing_imports = true
 
+# coverage configuration
+[tool.coverage.run]
+branch = true
+source = [
+    "src/yalab_procedures"
+]
 
-[[tool.mypy.overrides]]
-# Don't require test functions to include types
-module = "tests.*"
-allow_untyped_defs = true
-disable_error_code = "attr-defined"
+[tool.coverage.report]
+omit = [
+    "tests/*"
+]
