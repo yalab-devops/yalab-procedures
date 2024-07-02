@@ -112,18 +112,16 @@ Example
 
 .. code-block:: python
 
-    from src.yalab_procedures.procedures.dicom_to_bids import DicomToBidsProcedure
-
-    procedure = DicomToBidsProcedure(
-        input_directory="path/to/input", # Scanning session's DICOM directory
-        output_directory="path/to/output", # BIDS output directory
-        logging_directory="path/to/logs", # Optional, defaults to output directory
-        logging_level="INFO",
-        subject_id="01", # Subject ID
-        session_id="01", # Session ID
-        heuristic_file="path/to/heuristic.py" # Optional, defaults to YA Lab's heuristic file
-    )
-    procedure.run()
+    >>> from yalab_procedures.procedures.dicom_to_bids import DicomToBidsProcedure
+    >>> dcm2bids = DicomToBidsProcedure()
+    >>> dcm2bids.inputs.input_directory = '/path/to/dicom' # Scanning session's DICOM directory
+    >>> dcm2bids.inputs.output_directory = '/path/to/bids' # BIDS output directory
+    >>> dcm2bids.inputs.subject_id = '01' # Subject ID
+    >>> dcm2bids.inputs.session_id = '01' # Session ID
+    >>> dcm2bids.inputs.heuristic_file = '/path/to/heuristic.py'
+    >>> dcm2bids.inputs.cmdline
+    'heudiconv -s 01 -ss 01 -f /path/to/heuristic.py --files /path/to/dicom/*/*.dcm -o /path/to/bids -c dcm2niix --overwrite --bids'
+    >>> res = dcm2bids.run()  # doctest: +SKIP
 
 Logging
 -------

@@ -69,6 +69,24 @@ class DicomToBidsOutputSpec(ProcedureOutputSpec):
 
 
 class DicomToBidsProcedure(Procedure, CommandLine):
+    """
+    Convert DICOM files to BIDS format using `HeuDiConv. <https://heudiconv.readthedocs.io/en/latest/>`_
+
+    Examples
+    --------
+    >>> from yalab_procedures.procedures.dicom_to_bids import DicomToBidsProcedure
+    >>> dcm2bids = DicomToBidsProcedure()
+    >>> dcm2bids.inputs.subject_id = '01'
+    >>> dcm2bids.inputs.input_directory = '/path/to/dicom'
+    >>> dcm2bids.inputs.output_directory = '/path/to/bids'
+    >>> dcm2bids.inputs.session_id = '01'
+    >>> dcm2bids.inputs.heuristic_file = '/path/to/heuristic.py'
+    >>> dcm2bids.inputs.cmdline
+    'heudiconv -s 01 -ss 01 -f /path/to/heuristic.py --files /path/to/dicom/*/*.dcm -o /path/to/bids -c dcm2niix --overwrite --bids'
+    >>> res = dcmtobids.run() # doctest: +SKIP
+
+    """
+
     _cmd = "heudiconv"
     input_spec = DicomToBidsInputSpec
     output_spec = DicomToBidsOutputSpec
@@ -78,6 +96,14 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         self.infer_session_id()
 
     def run_procedure(self, **kwargs):
+        """
+        Run the DicomToBidsProcedure
+
+        Raises
+        ------
+        CalledProcessError
+            If the command fails to run. The error message will be logged.
+        """
 
         self.logger.info("Running DicomToBidsProcedure")
         self.logger.debug(f"Input attributes: {kwargs}")
@@ -109,7 +135,15 @@ class DicomToBidsProcedure(Procedure, CommandLine):
             session_id = "".join(session_id)
             self.inputs.session_id = session_id
 
-    def build_commandline(self):
+    def build_commandline(self) -> str:
+        """
+        Build the command line arguments for the heudiconv command
+
+        Returns
+        -------
+        str
+            The command line arguments as a string
+        """
         # Build the command line arguments
         cmd_args = self._parse_inputs()
         cmd = [self._cmd] + cmd_args
@@ -118,6 +152,14 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         return " ".join(cmd)
 
     def _list_outputs(self):
+        """
+        List the outputs of the DicomToBidsProcedure
+
+        Returns
+        -------
+        dict
+            The outputs of the procedure
+        """
         outputs = self._outputs().get()
         outputs["bids_directory"] = str(self.inputs.output_directory)
         return outputs
