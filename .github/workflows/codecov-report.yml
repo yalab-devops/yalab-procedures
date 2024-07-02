@@ -35,7 +35,7 @@ jobs:
     - name: Run tests and collect coverage
       run: |
         mkdir -p reports
-        pytest --cov-report xml:reports/coverage.xml --cov=src/yalab_procedures --cov-branch tests/ --verbose
+        pytest --cov-report term-missing:skip-covered --cov-report xml:reports/coverage.xml --cov-report html:reports/htmlcov --cov=src/yalab_procedures --cov-branch tests/ --verbose
 
     - name: Check coverage file
       run: |
