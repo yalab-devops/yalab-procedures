@@ -5,6 +5,7 @@
 
    installation
    user_guide/index
+   procedures/index
    api_reference/index
    api
    modules
