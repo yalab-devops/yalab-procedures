@@ -5,4 +5,4 @@ API Reference
    :maxdepth: 2
 
    procedure
-   other_modules
+   dicom_to_bids

@@ -5,4 +5,3 @@ User Guide
    :maxdepth: 2
 
    procedure
-   other_topics
