@@ -67,7 +67,7 @@ class Procedure(BaseInterface):
         """
         outputs = self._outputs().get()
         outputs["output_directory"] = str(self.inputs.output_directory)
-        outputs["log_file"] = self.log_file_path
+        outputs["log_file"] = str(self.log_file_path)
         return outputs
 
     def _gen_log_filename(self) -> str:
