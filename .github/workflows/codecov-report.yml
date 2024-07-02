@@ -24,21 +24,22 @@ jobs:
 
     - name: Verify directory structure
       run: |
-        ls -R
+        echo "Verifying directory structure:"
+        ls -R src/yalab_procedures
+
+    - name: Display .coveragerc
+      run: |
+        echo "Displaying .coveragerc content:"
+        cat .coveragerc
 
     - name: Run tests and collect coverage
       run: |
         mkdir -p reports
-        pytest --cov-report xml:reports/coverage.xml --cov-report html:reports/htmlcov --cov=src/yalab_procedures tests/ --verbose
-
-    - name: Upload HTML coverage report
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-report
-        path: reports/htmlcov
+        pytest --cov-report xml:reports/coverage.xml --cov=src/yalab_procedures --cov-branch tests/ --verbose
 
     - name: Check coverage file
       run: |
+        echo "Checking coverage file:"
         cat reports/coverage.xml
 
     - name: Upload coverage to Codecov
