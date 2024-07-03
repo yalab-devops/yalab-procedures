@@ -37,6 +37,7 @@ bids-validator = "^1.14.6"
 heudiconv = "^1.1.6"
 pytest-mock = "^3.14.0"
 pybids = "^0.16.5"
+fslpy = "^3.19.1"
 [tool.poetry.dev-dependencies]
 coverage = "^7.5.4"  # testing
 mypy = "^1.10.0"  # linting

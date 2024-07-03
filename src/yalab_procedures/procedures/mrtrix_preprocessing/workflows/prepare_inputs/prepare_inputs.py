@@ -45,7 +45,7 @@ def setup_output_directory(output_directory: str, subject_id: str, session_id: s
         subdir_path.mkdir(parents=True, exist_ok=True)
         result[subdirectory] = str(subdir_path)
 
-    return result.get("raw_data"), result.get("config_files")
+    return output_directory_path, result.get("raw_data"), result.get("config_files")
 
 
 def copy_file_to_output_directory(in_file: str, output_directory: str, out_name: str):
@@ -100,6 +100,26 @@ def rename_config_file(in_file: str, subject_id: str, session_id: str):
     return out_file
 
 
+def get_bids_directory(input_directory: str):
+    """
+    Get the BIDS directory from the input directory.
+
+    Parameters
+    ----------
+    input_directory : str
+        The input directory
+
+    Returns
+    -------
+    bids_directory : str
+        The BIDS directory
+    """
+    from pathlib import Path
+
+    input_directory_path = Path(input_directory)
+    return str(input_directory_path.parent.parent)
+
+
 def init_prepare_inputs_wf():
     """
     Prepare inputs workflow.
@@ -134,6 +154,7 @@ def init_prepare_inputs_wf():
     output_node = pe.Node(
         IdentityInterface(
             fields=[
+                "mrtrix_output_directory",
                 "raw_data_output_directory",
                 "config_files_output_directory",
                 "datain_file",
@@ -144,6 +165,7 @@ def init_prepare_inputs_wf():
         ),
         name="outputnode",
     )
+
     # Create the setup output directory node
     setup_output_directory_node = pe.Node(
         Function(
@@ -157,6 +179,7 @@ def init_prepare_inputs_wf():
                 "config_json",
             ],
             output_names=[
+                "mrtrix_output_directory",
                 "raw_data_output_directory",
                 "config_files_output_directory",
             ],
@@ -166,24 +189,55 @@ def init_prepare_inputs_wf():
 
     # Connect input_node to setup_output_directory_node
     prepare_inputs_wf.connect(
-        input_node, "output_directory", setup_output_directory_node, "output_directory"
-    )
-    prepare_inputs_wf.connect(
-        input_node, "subject_id", setup_output_directory_node, "subject_id"
-    )
-    prepare_inputs_wf.connect(
-        input_node, "session_id", setup_output_directory_node, "session_id"
+        [
+            (
+                input_node,
+                setup_output_directory_node,
+                [
+                    ("output_directory", "output_directory"),
+                    ("subject_id", "subject_id"),
+                    ("session_id", "session_id"),
+                ],
+            ),
+        ]
     )
 
+    # Create the get bids directory node
+    get_bids_directory_node = pe.Node(
+        Function(
+            function=get_bids_directory,
+            input_names=["input_directory"],
+            output_names=["bids_directory"],
+        ),
+        name="get_bids_directory_node",
+    )
+
+    # Connect input_node to get_bids_directory_node
+    prepare_inputs_wf.connect(
+        [
+            (
+                input_node,
+                get_bids_directory_node,
+                [("input_directory", "input_directory")],
+            ),
+        ]
+    )
     # Create the bids query node
     bids_query_node = pe.Node(
         YALabBidsQuery(raise_on_empty=False), name="bids_query_node"
     )
     prepare_inputs_wf.connect(
-        input_node, "input_directory", bids_query_node, "base_dir"
+        [(get_bids_directory_node, bids_query_node, [("bids_directory", "base_dir")])]
     )
-    prepare_inputs_wf.connect(input_node, "subject_id", bids_query_node, "subject")
-    prepare_inputs_wf.connect(input_node, "session_id", bids_query_node, "session")
+    prepare_inputs_wf.connect(
+        [
+            (
+                input_node,
+                bids_query_node,
+                [("subject_id", "subject"), ("session_id", "session")],
+            ),
+        ]
+    )
 
     # Create the copy raw data node - a map node that copies the raw data to the output directory
     copy_raw_data_node = pe.MapNode(
@@ -250,6 +304,7 @@ def init_prepare_inputs_wf():
                 setup_output_directory_node,
                 output_node,
                 [
+                    ("mrtrix_output_directory", "mrtrix_output_directory"),
                     ("config_files_output_directory", "config_files_output_directory"),
                     ("raw_data_output_directory", "raw_data_output_directory"),
                 ],
