@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import nipype.pipeline.engine as pe
-from nipype.interfaces.utility import Function, IdentityInterface, Merge
+from nipype.interfaces.utility import Function, IdentityInterface, Merge, Split
 
 from yalab_procedures.interfaces.data_grabber.data_grabber import YALabBidsQuery
 from yalab_procedures.procedures.mrtrix_preprocessing.workflows.prepare_inputs.bids_to_input import (
@@ -97,15 +97,31 @@ def prepare_inputs_wf():
         IdentityInterface(
             fields=["subject_id", "session_id", "input_directory", "output_directory"]
         ),
-        name="input_node",
+        name="inputnode",
     )
 
+    # Create the output node
+    output_node = pe.Node(
+        IdentityInterface(
+            fields=[
+                "raw_data_output_directory",
+                "config_files_output_directory",
+                "datain_file",
+                "index_file",
+            ]
+            + [val.split(".")[0] for val in BIDS_TO_INPUT_MAPPING.values()],
+        ),
+        name="outputnode",
+    )
     # Create the setup output directory node
     setup_output_directory_node = pe.Node(
         Function(
             function=setup_output_directory,
-            input_names=["output_directory", "subject_id", "session_id"],
-            output_names=["raw_data_output_directory", "config_files_output_directory"],
+            input_names=["output_directory", "subject_id", "session_id", "config_json"],
+            output_names=[
+                "raw_data_output_directory",
+                "config_files_output_directory",
+            ],
         ),
         name="setup_output_directory_node",
     )
@@ -150,14 +166,32 @@ def prepare_inputs_wf():
         copy_raw_data_node,
         "output_directory",
     )
+    prepare_inputs_wf.connect(
+        [
+            (
+                setup_output_directory_node,
+                output_node,
+                [
+                    ("config_files_output_directory", "config_files_output_directory"),
+                    ("raw_data_output_directory", "raw_data_output_directory"),
+                ],
+            ),
+        ]
+    )
 
+    n_splits = len(BIDS_TO_INPUT_MAPPING) + 2
     # Ensure listify nodes are used to create list inputs for the MapNode iterfields
     listify_bids_query_outputs_node = pe.Node(
-        Merge(len(BIDS_TO_INPUT_MAPPING) + 2), name="listify_bids_query_outputs_node"
+        Merge(n_splits), name="listify_bids_query_outputs_node"
     )
 
     listify_copy_data_inputs_node = pe.Node(
-        Merge(len(BIDS_TO_INPUT_MAPPING) + 2), name="listify_copy_data_inputs_node"
+        Merge(n_splits), name="listify_copy_data_inputs_node"
+    )
+
+    split_to_outputs_node = pe.Node(
+        Split(splits=[1] * n_splits),
+        name="split_to_outputs_node",
     )
     # add index and datain to the listify_copy_data_inputs_node
     for j, fname in enumerate(["datain.txt", "index.txt"]):
@@ -165,12 +199,24 @@ def prepare_inputs_wf():
             **{f"in{j+1}": [str(TEMPLATES_PATH / fname)]}
         )
         listify_copy_data_inputs_node.inputs.trait_set(**{f"in{j+1}": [fname]})
+        prepare_inputs_wf.connect(
+            split_to_outputs_node,
+            f"out{j+1}",
+            output_node,
+            fname.split(".")[0],
+        )
     # Populate listify nodes
     for i, (src, dest) in enumerate(BIDS_TO_INPUT_MAPPING.items()):
         prepare_inputs_wf.connect(
             bids_query_node, src, listify_bids_query_outputs_node, f"in{j+i+2}"
         )
         listify_copy_data_inputs_node.inputs.trait_set(**{f"in{j+i+2}": dest})
+        prepare_inputs_wf.connect(
+            split_to_outputs_node,
+            f"out{j+i+2}",
+            output_node,
+            dest.split(".")[0],
+        )
 
     # Connect the listify nodes to the copy raw data node
     prepare_inputs_wf.connect(
@@ -178,6 +224,9 @@ def prepare_inputs_wf():
     )
     prepare_inputs_wf.connect(
         listify_copy_data_inputs_node, "out", copy_raw_data_node, "out_name"
+    )
+    prepare_inputs_wf.connect(
+        copy_raw_data_node, "out_file", split_to_outputs_node, "inlist"
     )
 
     return prepare_inputs_wf
