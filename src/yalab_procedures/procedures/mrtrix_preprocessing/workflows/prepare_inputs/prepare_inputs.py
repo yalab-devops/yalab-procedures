@@ -15,30 +15,30 @@ def setup_output_directory(output_directory: str, subject_id: str, session_id: s
 
     MRTRIX_SUBDIRECTORIES = ["config_files", "raw_data"]
     result = {}
-    output_directory = Path(output_directory) / subject_id / session_id
+    output_directory_path = Path(output_directory)
+    output_directory_path = Path(
+        output_directory_path / subject_id / session_id
+    )  # Create the output directory
     for subdirectory in MRTRIX_SUBDIRECTORIES:
-        (output_directory / subdirectory).mkdir(parents=True, exist_ok=True)
-        result[subdirectory] = str(output_directory / subdirectory)
+        subdir_path = output_directory_path / subdirectory
+        subdir_path.mkdir(parents=True, exist_ok=True)
+        result[subdirectory] = str(subdir_path)
 
     return result.get("raw_data"), result.get("config_files")
 
 
-def copy_file_to_output_directory(
-    in_file: str, output_directory: str, out_name: str = None
-):
+def copy_file_to_output_directory(in_file: str, output_directory: str, out_name: str):
     """
     Copy a file to the output directory
     """
     from pathlib import Path
     from shutil import copyfile
 
-    in_file = Path(in_file)
-    output_directory = Path(output_directory)
-    out_file = (
-        output_directory / out_name if out_name else output_directory / in_file.name
-    )
+    in_file_path = Path(in_file)
+    output_directory_path = Path(output_directory)
+    out_file = output_directory_path / out_name
 
-    copyfile(in_file, out_file)
+    copyfile(in_file_path, out_file)
 
     return out_file
 
