@@ -78,7 +78,29 @@ def copy_file_to_output_directory(in_file: str, output_directory: str, out_name:
     return out_file
 
 
-def prepare_inputs_wf():
+def rename_config_file(in_file: str, subject_id: str, session_id: str):
+    """
+    Rename the config file to include the subject and session ID.
+
+    Parameters
+    ----------
+    in_file : str
+        The input file
+    subject_id : str
+        The subject ID
+    session_id : str
+        The session ID
+    """
+    from pathlib import Path
+
+    in_file_path = Path(in_file)
+    out_file = in_file_path.parent / f"{subject_id}_{session_id}.json"
+    in_file_path.rename(out_file)
+
+    return out_file
+
+
+def init_prepare_inputs_wf():
     """
     Prepare inputs workflow.
     This workflow prepares the inputs for the MRtrix preprocessing pipeline.
@@ -95,7 +117,15 @@ def prepare_inputs_wf():
     # Create the input node
     input_node = pe.Node(
         IdentityInterface(
-            fields=["subject_id", "session_id", "input_directory", "output_directory"]
+            fields=[
+                "subject_id",
+                "session_id",
+                "input_directory",
+                "output_directory",
+                "datain_file",
+                "index_file",
+                "config_file",
+            ]
         ),
         name="inputnode",
     )
@@ -108,6 +138,7 @@ def prepare_inputs_wf():
                 "config_files_output_directory",
                 "datain_file",
                 "index_file",
+                "config_file",
             ]
             + [val.split(".")[0] for val in BIDS_TO_INPUT_MAPPING.values()],
         ),
@@ -117,7 +148,14 @@ def prepare_inputs_wf():
     setup_output_directory_node = pe.Node(
         Function(
             function=setup_output_directory,
-            input_names=["output_directory", "subject_id", "session_id", "config_json"],
+            input_names=[
+                "output_directory",
+                "subject_id",
+                "session_id",
+                "index_file",
+                "datain_file",
+                "config_json",
+            ],
             output_names=[
                 "raw_data_output_directory",
                 "config_files_output_directory",
@@ -158,6 +196,46 @@ def prepare_inputs_wf():
         iterfield=["in_file", "out_name"],
     )
 
+    # Create a node to copy the config file to the configureation directory
+    copy_config_node = pe.Node(
+        Function(
+            function=copy_file_to_output_directory,
+            input_names=["in_file", "output_directory", "out_name"],
+            output_names=["out_file"],
+        ),
+        name="copy_config_node",
+    )
+    copy_config_node.inputs.out_name = "config.json"
+    prepare_inputs_wf.connect(
+        [
+            (input_node, copy_config_node, [("config_file", "in_file")]),
+            (
+                setup_output_directory_node,
+                copy_config_node,
+                [("config_files_output_directory", "output_directory")],
+            ),
+        ]
+    )
+    rename_config_node = pe.Node(
+        Function(
+            function=rename_config_file,
+            input_names=["in_file", "subject_id", "session_id"],
+            output_names=["out_file"],
+        ),
+        name="rename_config_node",
+    )
+    prepare_inputs_wf.connect(
+        [
+            (
+                input_node,
+                rename_config_node,
+                [("subject_id", "subject_id"), ("session_id", "session_id")],
+            ),
+            (copy_config_node, rename_config_node, [("out_file", "in_file")]),
+            (rename_config_node, output_node, [("out_file", "config_file")]),
+        ]
+    )
+
     # Connecting setup output directory node
 
     prepare_inputs_wf.connect(
@@ -194,16 +272,25 @@ def prepare_inputs_wf():
         name="split_to_outputs_node",
     )
     # add index and datain to the listify_copy_data_inputs_node
-    for j, fname in enumerate(["datain.txt", "index.txt"]):
-        listify_bids_query_outputs_node.inputs.trait_set(
-            **{f"in{j+1}": [str(TEMPLATES_PATH / fname)]}
-        )
-        listify_copy_data_inputs_node.inputs.trait_set(**{f"in{j+1}": [fname]})
+    for j, fname in enumerate(["datain_file.txt", "index_file.txt"]):
+        out_fname = fname.replace("_file", "")
+        # listify_bids_query_outputs_node.inputs.trait_set(
+        #     **{f"in{j+1}": [str(TEMPLATES_PATH / fname)]}
+        # )
+        listify_copy_data_inputs_node.inputs.trait_set(**{f"in{j+1}": [out_fname]})
         prepare_inputs_wf.connect(
-            split_to_outputs_node,
-            f"out{j+1}",
-            output_node,
-            fname.split(".")[0],
+            [
+                (
+                    input_node,
+                    listify_bids_query_outputs_node,
+                    [(fname.split(".")[0], f"in{j+1}")],
+                ),
+                (
+                    split_to_outputs_node,
+                    output_node,
+                    [(f"out{j+1}", fname.split(".")[0])],
+                ),
+            ]
         )
     # Populate listify nodes
     for i, (src, dest) in enumerate(BIDS_TO_INPUT_MAPPING.items()):
