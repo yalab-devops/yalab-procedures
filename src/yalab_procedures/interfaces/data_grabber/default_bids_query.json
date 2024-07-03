@@ -38,5 +38,11 @@
         "datatype": "dwi",
         "direction": "PA",
         "extension": ["json"]
+    },
+    "T1w_corrected": {
+        "datatype": "anat",
+        "ceagent": "corrected",
+        "suffix": "T1w",
+        "extension": ["nii.gz"]
     }
 }
