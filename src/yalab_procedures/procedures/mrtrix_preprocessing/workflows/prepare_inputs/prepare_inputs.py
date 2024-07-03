@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import nipype.pipeline.engine as pe
 from nipype.interfaces.utility import Function, IdentityInterface, Merge
 
@@ -6,10 +8,29 @@ from yalab_procedures.procedures.mrtrix_preprocessing.workflows.prepare_inputs.b
     BIDS_TO_INPUT_MAPPING,
 )
 
+TEMPLATES_PATH = Path(__file__).parent / "templates"
+
 
 def setup_output_directory(output_directory: str, subject_id: str, session_id: str):
     """
-    Setup the output directory
+    Setup the output directory.
+    This function creates the output directory and subdirectories for the MRtrix preprocessing pipeline.
+
+    Parameters
+    ----------
+    output_directory : str
+        The output directory
+    subject_id : str
+        The subject ID
+    session_id : str
+        The session ID
+
+    Returns
+    -------
+    raw_data_output_directory : str
+        The raw data output directory (output_directory/subject_id/session_id/raw_data)
+    config_files_output_directory : str
+        The config files output directory (output_directory/subject_id/session_id/config_files)
     """
     from pathlib import Path
 
@@ -29,7 +50,21 @@ def setup_output_directory(output_directory: str, subject_id: str, session_id: s
 
 def copy_file_to_output_directory(in_file: str, output_directory: str, out_name: str):
     """
-    Copy a file to the output directory
+    Copy a file to the output directory.
+
+    Parameters
+    ----------
+    in_file : str
+        The input file
+    output_directory : str
+        The output directory
+    out_name : str
+        The output name
+
+    Returns
+    -------
+    out_file : str
+        The output file
     """
     from pathlib import Path
     from shutil import copyfile
@@ -45,7 +80,13 @@ def copy_file_to_output_directory(in_file: str, output_directory: str, out_name:
 
 def prepare_inputs_wf():
     """
-    Prepare inputs workflow
+    Prepare inputs workflow.
+    This workflow prepares the inputs for the MRtrix preprocessing pipeline.
+
+    Returns
+    -------
+    prepare_inputs_wf : nipype Workflow
+        The prepare inputs workflow
     """
 
     # Create the workflow
@@ -112,18 +153,24 @@ def prepare_inputs_wf():
 
     # Ensure listify nodes are used to create list inputs for the MapNode iterfields
     listify_bids_query_outputs_node = pe.Node(
-        Merge(len(BIDS_TO_INPUT_MAPPING)), name="listify_bids_query_outputs_node"
-    )
-    listify_copy_data_inputs_node = pe.Node(
-        Merge(len(BIDS_TO_INPUT_MAPPING)), name="listify_copy_data_inputs_node"
+        Merge(len(BIDS_TO_INPUT_MAPPING) + 2), name="listify_bids_query_outputs_node"
     )
 
+    listify_copy_data_inputs_node = pe.Node(
+        Merge(len(BIDS_TO_INPUT_MAPPING) + 2), name="listify_copy_data_inputs_node"
+    )
+    # add index and datain to the listify_copy_data_inputs_node
+    for j, fname in enumerate(["datain.txt", "index.txt"]):
+        listify_bids_query_outputs_node.inputs.trait_set(
+            **{f"in{j+1}": [str(TEMPLATES_PATH / fname)]}
+        )
+        listify_copy_data_inputs_node.inputs.trait_set(**{f"in{j+1}": [fname]})
     # Populate listify nodes
     for i, (src, dest) in enumerate(BIDS_TO_INPUT_MAPPING.items()):
         prepare_inputs_wf.connect(
-            bids_query_node, src, listify_bids_query_outputs_node, f"in{i+1}"
+            bids_query_node, src, listify_bids_query_outputs_node, f"in{j+i+2}"
         )
-        listify_copy_data_inputs_node.inputs.set(**{f"in{i+1}": dest})
+        listify_copy_data_inputs_node.inputs.trait_set(**{f"in{j+i+2}": dest})
 
     # Connect the listify nodes to the copy raw data node
     prepare_inputs_wf.connect(
