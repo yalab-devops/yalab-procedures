@@ -23,6 +23,10 @@ def get_files_from_config(config_file: str, keys: list = ["datain", "index"]):
         The files extracted from the configuration file
     """
     import json
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"Reading configuration file: {config_file}")
 
     result = {}
 
@@ -33,8 +37,12 @@ def get_files_from_config(config_file: str, keys: list = ["datain", "index"]):
         value = config.get(key, None)
         if value is not None:
             result[key] = value
+            logger.info(f"Key {key} found in configuration file")
         else:
-            raise ValueError(f"Key {key} not found in configuration file")
+            msg = f"Key {key} not found in configuration file"
+            logger.error(msg)
+            raise ValueError(msg)
+
     return result.get("datain"), result.get("index")
 
 
@@ -60,10 +68,19 @@ def run_comis_cortical(
     output_directory : str
         The output directory
     """
+    import logging
     import subprocess
 
+    logger = logging.getLogger(__name__)
+    msg = "Running comis_cortical command with the following parameters:"
+    msg += f"\ncomis_cortical_exec: {comis_cortical_exec}"
+    msg += f"\ninput_directory: {input_directory}"
+    msg += f"\nsubject_id: {subject_id}"
+    msg += f"\nsession_id: {session_id}"
+    logger.info(msg)
+
     command = f"python3 {comis_cortical_exec} {input_directory} {subject_id}_{session_id} {input_directory}"
-    print(command)
+    logger.info(f"Running command: {command}")
     result = subprocess.run(
         command,
         shell=True,
@@ -73,6 +90,8 @@ def run_comis_cortical(
     )
     if result.stderr:
         raise ValueError(result.stderr)
+    logger.info(result.stdout)
+    logger.info("Finished running comis_cortical command")
     return result.stdout
 
 

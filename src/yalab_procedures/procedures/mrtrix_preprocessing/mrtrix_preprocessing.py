@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import git
+from nipype import logging as nipype_logging
 from nipype.interfaces.base import CommandLine, Directory, isdefined, traits
 
 from yalab_procedures.procedures.base.procedure import (
@@ -10,6 +12,8 @@ from yalab_procedures.procedures.base.procedure import (
 from yalab_procedures.procedures.mrtrix_preprocessing.workflows.mrtrix_preprocessing_wf import (
     init_mrtrix_preprocessing_wf,
 )
+
+COMIS_CORTICAL_GITHUB = "git@github.com:RonnieKrup/ComisCorticalCode.git"
 
 
 class MrtrixPreprocessingInputSpec(ProcedureInputSpec):
@@ -27,7 +31,7 @@ class MrtrixPreprocessingInputSpec(ProcedureInputSpec):
     session_id = traits.Str(mandatory=False, desc="Session ID")
     comis_cortical_exec = traits.Str(
         exists=True,
-        mandatory=True,
+        mandatory=False,
         desc="Path to the Comis cortical executable.",
     )
     config_file = traits.File(
@@ -60,6 +64,8 @@ class MrtrixPreprocessingProcedure(Procedure, CommandLine):
     Procedure to preprocess DWI data using MRtrix3
     """
 
+    comis_cortical_github = COMIS_CORTICAL_GITHUB
+    comis_cortical_exec_default_destination = "{repo}/PreProcessing/run_for_sub.py"
     _cmd = "comis_cortical"
     input_spec = MrtrixPreprocessingInputSpec
     output_spec = MrtrixPreprocessingOutputSpec
@@ -86,9 +92,15 @@ class MrtrixPreprocessingProcedure(Procedure, CommandLine):
         """
         Run the MRtrix preprocessing procedure
         """
+        self.logger.info("Starting MRtrix preprocessing procedure...")
+        self.logger.info("Validating Comis cortical executable.")
+        self.validate_comis_cortical_exec()
+        self.logger.info("Inferring additional inputs.")
         self.set_missing_inputs()
+        self.logger.info("Initiating workflow.")
         wf = self.initiate_workflow()
-        return wf
+        self.logger.info("Running workflow.")
+        wf.run()
 
     def initiate_workflow(self):
         """
@@ -109,6 +121,49 @@ class MrtrixPreprocessingProcedure(Procedure, CommandLine):
         wf.inputs.inputnode.config_file = self.inputs.config_file
         wf.inputs.inputnode.output_directory = self.inputs.output_directory
         return wf
+
+    def validate_comis_cortical_exec(self):
+        """
+        Validate the Comis cortical executable
+        """
+        if not isdefined(self.inputs.comis_cortical_exec):
+            self.logger.info("Comis cortical executable not provided.")
+            self.inputs.comis_cortical_exec = self._download_comis_cortical_exec()
+
+    def _download_comis_cortical_exec(self):
+        """
+        Download the Comis cortical executable
+        """
+        self.logger.info("Downloading Comis cortical executable.")
+        comis_cortical_repo = self._clone_comis_cortical_repo()
+        self.logger.info("Comis cortical executable downloaded.")
+        comis_cortical_exec = self.comis_cortical_exec_default_destination.format(
+            repo=comis_cortical_repo
+        )
+        if not Path(comis_cortical_exec).exists():
+            raise FileNotFoundError(
+                f"Comis cortical executable not found at {comis_cortical_exec}"
+            )
+        else:
+            self.logger.info(
+                f"Comis cortical executable found at {comis_cortical_exec}"
+            )
+        return comis_cortical_exec
+
+    def _clone_comis_cortical_repo(self):
+        """
+        Clone the Comis cortical repository
+        """
+        comis_cortical_repo = Path(self.inputs.work_directory) / "ComisCorticalCode"
+        nipype_logging.getLogger("nipype.workflow").info(
+            f"Cloning Comis cortical repository to {comis_cortical_repo}"
+        )
+        comis_cortical_repo = comis_cortical_repo.resolve()
+        if not comis_cortical_repo.exists():
+            git.Git(comis_cortical_repo.parent).clone(self.comis_cortical_github)
+            self.logger.info("Comis cortical repository cloned.")
+
+        return comis_cortical_repo
 
     def _gen_wf_name(self):
         return f"mrtrix_preprocessing_sub-{self.inputs.subject_id}_ses-{self.inputs.session_id}"

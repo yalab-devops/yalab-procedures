@@ -32,9 +32,14 @@ def setup_output_directory(output_directory: str, subject_id: str, session_id: s
     config_files_output_directory : str
         The config files output directory (output_directory/subject_id/session_id/config_files)
     """
+    import logging
     from pathlib import Path
 
+    logger = logging.getLogger(__name__)
     MRTRIX_SUBDIRECTORIES = ["config_files", "raw_data"]
+    logger.info(
+        f"Setting up output directory: {output_directory} with subject ID: {subject_id} and session ID: {session_id}"
+    )
     result = {}
     output_directory_path = Path(output_directory)
     output_directory_path = Path(
@@ -43,6 +48,7 @@ def setup_output_directory(output_directory: str, subject_id: str, session_id: s
     for subdirectory in MRTRIX_SUBDIRECTORIES:
         subdir_path = output_directory_path / subdirectory
         subdir_path.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Created subdirectory: {subdir_path}")
         result[subdirectory] = str(subdir_path)
 
     return output_directory_path, result.get("raw_data"), result.get("config_files")
@@ -66,8 +72,14 @@ def copy_file_to_output_directory(in_file: str, output_directory: str, out_name:
     out_file : str
         The output file
     """
+    import logging
     from pathlib import Path
     from shutil import copyfile
+
+    logger = logging.getLogger(__name__)
+    logger.info(
+        f"Copying file: {in_file} to output directory: {output_directory} as {out_name}"
+    )
 
     in_file_path = Path(in_file)
     output_directory_path = Path(output_directory)
@@ -91,11 +103,17 @@ def rename_config_file(in_file: str, subject_id: str, session_id: str):
     session_id : str
         The session ID
     """
+    import logging
     from pathlib import Path
+
+    logger = logging.getLogger(__name__)
 
     in_file_path = Path(in_file)
     out_file = in_file_path.parent / f"{subject_id}_{session_id}.json"
     in_file_path.rename(out_file)
+    logger.info(
+        f"Renaming config file: {in_file} to {out_file} with subject ID: {subject_id} and session ID: {session_id}"
+    )
 
     return out_file
 
@@ -114,10 +132,17 @@ def get_bids_directory(input_directory: str):
     bids_directory : str
         The BIDS directory
     """
+    import logging
     from pathlib import Path
 
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"Getting BIDS directory from input directory: {input_directory}")
     input_directory_path = Path(input_directory)
-    return str(input_directory_path.parent.parent)
+    bids_dir = str(input_directory_path.parent.parent)
+    logger.info(f"Found BIDS directory: {bids_dir}")
+
+    return bids_dir
 
 
 def init_prepare_inputs_wf():
