@@ -91,6 +91,14 @@ class MrtrixPreprocessingProcedure(Procedure, CommandLine):
         return wf
 
     def initiate_workflow(self):
+        """
+        Initiate the MRtrix preprocessing workflow
+
+        Returns
+        -------
+        wf : pe.Workflow
+            The MRtrix preprocessing workflow
+        """
         wf = init_mrtrix_preprocessing_wf(self._gen_wf_name())
         if isdefined(self.inputs.work_directory):
             wf.base_dir = self.inputs.work_directory
