@@ -22,6 +22,10 @@ DEFAULT_HEURISTIC = Path(__file__).parent / "templates" / "heuristic.py"
 
 
 class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
+    """
+    Input specification for the DicomToBidsProcedure
+    """
+
     subject_id = traits.Str(argstr="-s %s", mandatory=True, desc="Subject ID")
     session_id = traits.Str(argstr="-ss %s", desc="Session ID")
     heuristic_file = File(
@@ -65,6 +69,10 @@ class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
 
 
 class DicomToBidsOutputSpec(ProcedureOutputSpec):
+    """
+    Output specification for the DicomToBidsProcedure
+    """
+
     bids_directory = Directory(desc="Output BIDS directory")
 
 
@@ -93,7 +101,6 @@ class DicomToBidsProcedure(Procedure, CommandLine):
 
     def __init__(self, **inputs):
         super(DicomToBidsProcedure, self).__init__(**inputs)
-        self.infer_session_id()
 
     def run_procedure(self, **kwargs):
         """
@@ -106,6 +113,7 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         """
 
         self.logger.info("Running DicomToBidsProcedure")
+        self.infer_session_id()
         self.logger.debug(f"Input attributes: {kwargs}")
 
         # Run the heudiconv command

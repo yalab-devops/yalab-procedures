@@ -41,6 +41,10 @@ class Procedure(BaseInterface):
     def __init__(self, **inputs: Any):
         super().__init__(**inputs)
 
+    def _run_interface(self, runtime) -> Any:
+        """
+        Executes the interface, setting up logging and calling the procedure.
+        """
         # Validate directories and set up logging
         if not isdefined(self.inputs.logging_directory):
             self.inputs.logging_directory = self.inputs.output_directory
@@ -50,12 +54,6 @@ class Procedure(BaseInterface):
         self.logger.info(
             f"Running procedure with input directory: {self.inputs.input_directory}"
         )
-
-    def _run_interface(self, runtime) -> Any:
-        """
-        Executes the interface, setting up logging and calling the procedure.
-        """
-
         # Run the custom procedure
         self.run_procedure(**self.inputs.__dict__)
 

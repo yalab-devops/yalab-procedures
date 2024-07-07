@@ -102,6 +102,7 @@ def test_infer_session_id(dicom_to_bids_procedure_no_session):
             2:
         ]
     )
+    dicom_to_bids_procedure_no_session.infer_session_id()
     assert dicom_to_bids_procedure_no_session.inputs.session_id == true_session_id
 
 

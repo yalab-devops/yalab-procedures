@@ -1,0 +1,14 @@
+{
+    "atlas": "/path/to/atlas/image.nii.gz",
+    "atlas_template": "/path/to/atlas/template.nii.gz",
+    "stepscale": 0.5,
+    "lenscale_min": 15,
+    "lenscale_max": 250,
+    "angle": 45,
+    "ntracts": 40000,
+    "nthreads": 1,
+    "datain": "/path/to/datain.txt",
+    "index": "path/to/index.txt",
+    "out": "/path/to/mrtrix/output/directory",
+    "njobs": 16
+  }
