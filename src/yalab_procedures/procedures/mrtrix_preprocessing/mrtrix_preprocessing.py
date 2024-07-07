@@ -10,6 +10,7 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureOutputSpec,
 )
 from yalab_procedures.procedures.mrtrix_preprocessing.workflows.mrtrix_preprocessing_wf import (
+    init_comis_cortical_wf,
     init_mrtrix_preprocessing_wf,
 )
 
@@ -97,12 +98,14 @@ class MrtrixPreprocessingProcedure(Procedure, CommandLine):
         self.validate_comis_cortical_exec()
         self.logger.info("Inferring additional inputs.")
         self.set_missing_inputs()
-        self.logger.info("Initiating workflow.")
-        wf = self.initiate_workflow()
-        self.logger.info("Running workflow.")
+        self.logger.info("Initiating workflow for preparing inputs.")
+        wf = self.initiate_prepare_inputs_workflow()
         wf.run()
+        self.logger.info("Running preprocessing workflow.")
+        comis_cortical = init_comis_cortical_wf(wf)
+        comis_cortical.run()
 
-    def initiate_workflow(self):
+    def initiate_prepare_inputs_workflow(self):
         """
         Initiate the MRtrix preprocessing workflow
 

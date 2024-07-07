@@ -210,6 +210,7 @@ def init_prepare_inputs_wf():
             ],
         ),
         name="setup_output_directory_node",
+        run_without_submitting=True,
     )
 
     # Connect input_node to setup_output_directory_node
@@ -235,6 +236,7 @@ def init_prepare_inputs_wf():
             output_names=["bids_directory"],
         ),
         name="get_bids_directory_node",
+        run_without_submitting=True,
     )
 
     # Connect input_node to get_bids_directory_node
@@ -249,7 +251,9 @@ def init_prepare_inputs_wf():
     )
     # Create the bids query node
     bids_query_node = pe.Node(
-        YALabBidsQuery(raise_on_empty=False), name="bids_query_node"
+        YALabBidsQuery(raise_on_empty=False),
+        name="bids_query_node",
+        run_without_submitting=True,
     )
     prepare_inputs_wf.connect(
         [(get_bids_directory_node, bids_query_node, [("bids_directory", "base_dir")])]
@@ -273,6 +277,7 @@ def init_prepare_inputs_wf():
         ),
         name="copy_raw_data_node",
         iterfield=["in_file", "out_name"],
+        run_without_submitting=True,
     )
 
     # Create a node to copy the config file to the configureation directory
@@ -283,6 +288,7 @@ def init_prepare_inputs_wf():
             output_names=["out_file"],
         ),
         name="copy_config_node",
+        run_without_submitting=True,
     )
     copy_config_node.inputs.out_name = "config.json"
     prepare_inputs_wf.connect(
@@ -302,6 +308,7 @@ def init_prepare_inputs_wf():
             output_names=["out_file"],
         ),
         name="rename_config_node",
+        run_without_submitting=True,
     )
     prepare_inputs_wf.connect(
         [
@@ -340,16 +347,21 @@ def init_prepare_inputs_wf():
     n_splits = len(BIDS_TO_INPUT_MAPPING) + 2
     # Ensure listify nodes are used to create list inputs for the MapNode iterfields
     listify_bids_query_outputs_node = pe.Node(
-        Merge(n_splits), name="listify_bids_query_outputs_node"
+        Merge(n_splits),
+        name="listify_bids_query_outputs_node",
+        run_without_submitting=True,
     )
 
     listify_copy_data_inputs_node = pe.Node(
-        Merge(n_splits), name="listify_copy_data_inputs_node"
+        Merge(n_splits),
+        name="listify_copy_data_inputs_node",
+        run_without_submitting=True,
     )
 
     split_to_outputs_node = pe.Node(
         Split(splits=[1] * n_splits),
         name="split_to_outputs_node",
+        run_without_submitting=True,
     )
     # add index and datain to the listify_copy_data_inputs_node
     for j, fname in enumerate(["datain_file.txt", "index_file.txt"]):

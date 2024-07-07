@@ -101,7 +101,6 @@ class DicomToBidsProcedure(Procedure, CommandLine):
 
     def __init__(self, **inputs):
         super(DicomToBidsProcedure, self).__init__(**inputs)
-        self.infer_session_id()
 
     def run_procedure(self, **kwargs):
         """
@@ -114,6 +113,7 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         """
 
         self.logger.info("Running DicomToBidsProcedure")
+        self.infer_session_id()
         self.logger.debug(f"Input attributes: {kwargs}")
 
         # Run the heudiconv command

@@ -1,3 +1,4 @@
+from pathlib import Path
 import nipype.pipeline.engine as pe
 from nipype.interfaces.utility import Function, IdentityInterface
 
@@ -163,7 +164,33 @@ def init_mrtrix_preprocessing_wf(name: str) -> pe.Workflow:
             ),
         ]
     )
+    return wf
 
+
+def init_comis_cortical_wf(mrtrix_preprocessing_wf: pe.Workflow) -> pe.Workflow:
+    """
+    Initialize the Comis cortical workflow.
+
+    Parameters
+    ----------
+    mrtrix_preprocessing_wf : nipype Workflow
+        The MRtrix preprocessing workflow
+
+    Returns
+    -------
+    wf : nipype Workflow
+        The Comis cortical workflow
+    """
+    wf = pe.Workflow(name="comis_cortical_wf")
+    wf.base_dir = str(
+        Path(mrtrix_preprocessing_wf.base_dir) / mrtrix_preprocessing_wf.name
+    )
+    input_node = pe.Node(
+        name="inputnode",
+        interface=IdentityInterface(
+            fields=["comis_cortical_exec", "subject_id", "session_id", "input_direct"]
+        ),
+    )
     # Create the run comis cortical node
     run_comis_cortical_node = pe.Node(
         name="run_comis_cortical_node",
@@ -180,19 +207,47 @@ def init_mrtrix_preprocessing_wf(name: str) -> pe.Workflow:
     wf.connect(
         [
             (
+                mrtrix_preprocessing_wf,
+                input_node,
+                [
+                    ("inputnode.comis_cortical_exec", "comis_cortical_exec"),
+                    ("inputnode.subject_id", "subject_id"),
+                    ("inputnode.session_id", "session_id"),
+                    (
+                        "prepare_inputs_wf.outputnode.mrtrix_output_directory",
+                        "input_directory",
+                    ),
+                ],
+            ),
+            (
                 input_node,
                 run_comis_cortical_node,
                 [
                     ("comis_cortical_exec", "comis_cortical_exec"),
                     ("subject_id", "subject_id"),
                     ("session_id", "session_id"),
+                    ("input_directory", "input_directory"),
                 ],
-            ),
-            (
-                prepare_inputs_wf,
-                run_comis_cortical_node,
-                [("outputnode.mrtrix_output_directory", "input_directory")],
             ),
         ]
     )
     return wf
+    # wf.connect(
+    #     [
+    #         (
+    #             input_node,
+    #             run_comis_cortical_node,
+    #             [
+    #                 ("comis_cortical_exec", "comis_cortical_exec"),
+    #                 ("subject_id", "subject_id"),
+    #                 ("session_id", "session_id"),
+    #             ],
+    #         ),
+    #         (
+    #             prepare_inputs_wf,
+    #             run_comis_cortical_node,
+    #             [("outputnode.mrtrix_output_directory", "input_directory")],
+    #         ),
+    #     ]
+    # )
+    # return wf

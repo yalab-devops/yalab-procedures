@@ -39,6 +39,7 @@ pytest-mock = "^3.14.0"
 pybids = "^0.16.5"
 fslpy = "^3.19.1"
 gitpython = "^3.1.43"
+pytest-cov = "^5.0.0"
 [tool.poetry.dev-dependencies]
 coverage = "^7.5.4"  # testing
 mypy = "^1.10.0"  # linting
