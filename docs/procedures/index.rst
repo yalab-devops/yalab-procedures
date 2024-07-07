@@ -9,3 +9,4 @@ This section contains documentation for existing procedures (such that have alre
    :maxdepth: 2
 
    dicom_to_bids
+   mrtrix_preprocessing
