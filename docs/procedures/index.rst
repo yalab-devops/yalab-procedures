@@ -10,3 +10,4 @@ This section contains documentation for existing procedures (such that have alre
 
    dicom_to_bids
    mrtrix_preprocessing
+   neuroflow
