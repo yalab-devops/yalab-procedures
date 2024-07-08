@@ -16,6 +16,15 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureOutputSpec,
 )
 
+NEUROFLOW_STEPS = [
+    "smriprep",
+    "atlases",
+    "dipy_tensors",
+    "mrtrix3_tensors",
+    "covariates",
+    "connectome_recon",
+]
+
 
 class NeuroflowInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     """
@@ -54,6 +63,7 @@ class NeuroflowInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         mandatory=False,
         argstr="--atlases %s",
         desc="List of atlases to use",
+        sep=",",
     )
     crop_to_gm = traits.Bool(
         mandatory=False,
@@ -86,13 +96,16 @@ class NeuroflowInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         traits.Str,
         mandatory=False,
         argstr="--ignore_steps %s",
-        desc="List of steps to ignore",
+        desc="List of steps to ignore. Available steps are: "
+        + ", ".join(NEUROFLOW_STEPS),
+        sep=",",
     )
     steps = traits.List(
         traits.Str,
         mandatory=False,
         argstr="--steps %s",
-        desc="List of steps to run",
+        desc="List of steps to run. Available steps are: " + ", ".join(NEUROFLOW_STEPS),
+        sep=",",
     )
     force = traits.Bool(
         mandatory=False,
@@ -117,16 +130,16 @@ class NeuroflowProcedure(Procedure, CommandLine):
 
     Examples
     --------
-    >>> from yalab_procedures.procedures.dicom_to_bids import DicomToBidsProcedure
-    >>> dcm2bids = DicomToBidsProcedure()
-    >>> dcm2bids.inputs.subject_id = '01'
-    >>> dcm2bids.inputs.input_directory = '/path/to/dicom'
-    >>> dcm2bids.inputs.output_directory = '/path/to/bids'
-    >>> dcm2bids.inputs.session_id = '01'
-    >>> dcm2bids.inputs.heuristic_file = '/path/to/heuristic.py'
-    >>> dcm2bids.inputs.cmdline
-    'heudiconv -s 01 -ss 01 -f /path/to/heuristic.py --files /path/to/dicom/*/*.dcm -o /path/to/bids -c dcm2niix --overwrite --bids'
-    >>> res = dcmtobids.run() # doctest: +SKIP
+    >>> from yalab_procedures.procedures.neuroflow import NeuroflowProcedure
+    >>> neuroflow = NeuroflowProcedure()
+    >>> neuroflow = NeuroflowProcedure()
+    >>> neuroflow.inputs.input_directory = "/path/to/preprocessed/data"
+    >>> neuroflow.inputs.output_directory = "/path/to/neuroflow/output"
+    >>> neuroflow.inputs.google_credentials = "/path/to/google_credentials.json"
+    >>> neuroflow.inputs.atlases = ["fan2016","huang2022"]
+    >>> neuroflow.inputs.cmdline
+    'neuroflow process /path/to/preprocessed/data /path/to/neuroflow/output /path/to/google_credentials.json --atlases fan2016,huang2022 --crop_to_gm --max_bval 1000 --use_smriprep'
+    >>> res = neuroflow.run() # doctest: +SKIP
 
     """
 
