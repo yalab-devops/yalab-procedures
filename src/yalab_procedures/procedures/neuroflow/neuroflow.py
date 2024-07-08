@@ -180,22 +180,6 @@ class NeuroflowProcedure(Procedure, CommandLine):
             )
         self.logger.info("Finished running NeuroflowProcedure")
 
-    def build_commandline(self) -> str:
-        """
-        Build the command line arguments for the heudiconv command
-
-        Returns
-        -------
-        str
-            The command line arguments as a string
-        """
-        # Build the command line arguments
-        cmd_args = self._parse_inputs()
-        cmd = [self._cmd] + cmd_args
-        self.logger.debug(f"Command line: {' '.join(cmd)}")
-        # Run the command
-        return " ".join(cmd)
-
     def _list_outputs(self):
         """
         List the outputs of the DicomToBidsProcedure

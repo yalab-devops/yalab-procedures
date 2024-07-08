@@ -16,16 +16,19 @@ def temp_dir():
 def neuroflow_procedure(temp_dir):
     input_dir = temp_dir / "input"
     output_dir = temp_dir / "output"
+    logging_dir = temp_dir / "logs"
     google_credentials = temp_dir / "google_credentials.json"
 
     input_dir.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
+    logging_dir.mkdir(parents=True, exist_ok=True)
     google_credentials.write_text("")
 
     config = {
         "input_directory": str(input_dir),
         "output_directory": str(output_dir),
         "google_credentials": str(google_credentials),
+        "logging_directory": str(logging_dir),
         "atlases": ["fan2016", "huang2022"],
     }
     procedure = NeuroflowProcedure(**config)
@@ -54,3 +57,15 @@ def test_command_line_construction(neuroflow_procedure):
         f"--crop_to_gm --max_bval 1000 --use_smriprep"
     ).strip()
     assert cmd == expected_cmd
+
+
+def test_failed_execution(neuroflow_procedure):
+    with pytest.raises(Exception):
+        neuroflow_procedure.run()
+
+
+def test_list_outputs(neuroflow_procedure):
+    outputs = neuroflow_procedure._list_outputs()
+    assert outputs["output_directory"] == str(
+        neuroflow_procedure.inputs.output_directory
+    )
