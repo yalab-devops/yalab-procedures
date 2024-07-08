@@ -137,3 +137,10 @@ def test_logger_contains_error(mock_run, dicom_to_bids_procedure):
         Path(dicom_to_bids_procedure.inputs.logging_directory).glob("*.log")
     )
     assert len(log_files) == 1
+
+
+def test_list_outputs(dicom_to_bids_procedure):
+    outputs = dicom_to_bids_procedure._list_outputs()
+    assert outputs["bids_directory"] == str(
+        dicom_to_bids_procedure.inputs.output_directory
+    )
