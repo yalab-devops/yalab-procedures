@@ -14,7 +14,7 @@ from yalab_procedures.procedures.mrtrix_preprocessing.workflows.mrtrix_preproces
     init_mrtrix_preprocessing_wf,
 )
 
-COMIS_CORTICAL_GITHUB = "git@github.com:RonnieKrup/ComisCorticalCode.git"
+COMIS_CORTICAL_GITHUB = "https://github.com/RonnieKrup/ComisCorticalCode.git"
 
 
 class MrtrixPreprocessingInputSpec(ProcedureInputSpec):
