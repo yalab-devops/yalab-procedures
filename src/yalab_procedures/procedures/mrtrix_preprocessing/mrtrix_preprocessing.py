@@ -70,6 +70,7 @@ class MrtrixPreprocessingProcedure(Procedure, CommandLine):
     _cmd = "comis_cortical"
     input_spec = MrtrixPreprocessingInputSpec
     output_spec = MrtrixPreprocessingOutputSpec
+    _version = "0.0.1"
 
     def __init__(self, **inputs: dict):
         super().__init__(**inputs)

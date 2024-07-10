@@ -146,6 +146,7 @@ class NeuroflowProcedure(Procedure, CommandLine):
     _cmd = "neuroflow process"
     input_spec = NeuroflowInputSpec
     output_spec = NeuroflowOutputSpec
+    _version = "0.0.1"
 
     def __init__(self, **inputs):
         super(NeuroflowProcedure, self).__init__(**inputs)
