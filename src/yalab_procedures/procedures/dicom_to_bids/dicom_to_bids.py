@@ -126,7 +126,10 @@ class DicomToBidsProcedure(Procedure, CommandLine):
             text=True,
         )
         self.logger.info(result.stdout)
-        if result.stderr:
+        if (
+            result.stderr
+            and "TypeError: 'NoneType' object is not iterable" not in result.stderr
+        ):
             self.logger.error(result.stderr)
             raise CalledProcessError(
                 result.returncode, command, output=result.stdout, stderr=result.stderr
