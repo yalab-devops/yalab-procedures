@@ -51,6 +51,13 @@ class Procedure(BaseInterface):
         """
         Executes the interface, setting up logging and calling the procedure.
         """
+        # Validate directories and set up logging
+        if not isdefined(self.inputs.logging_directory):
+            self.inputs.logging_directory = self.inputs.output_directory
+
+        self.setup_logging()
+
+        # set up a "finished" file to keep track of when the procedure was last run
         finished_file = (
             Path(self.inputs.logging_directory)
             / f"{type(self).__name__}-{self._version}.done"
@@ -68,11 +75,6 @@ class Procedure(BaseInterface):
                 self.logger.info(
                     f"Procedure already ran at {timestamp}. Running again because force=True."
                 )
-        # Validate directories and set up logging
-        if not isdefined(self.inputs.logging_directory):
-            self.inputs.logging_directory = self.inputs.output_directory
-
-        self.setup_logging()
 
         self.logger.info(
             f"Running procedure with input directory: {self.inputs.input_directory}"
