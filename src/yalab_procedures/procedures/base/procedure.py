@@ -27,6 +27,11 @@ class ProcedureInputSpec(BaseInterfaceInputSpec):
         usedefault=True,
         default="INFO",
     )
+    force = traits.Bool(
+        False,
+        usedefault=True,
+        desc="Whether to force the procedure to run even if the output directory already exists.",
+    )
 
 
 class ProcedureOutputSpec(TraitedSpec):
@@ -37,6 +42,7 @@ class ProcedureOutputSpec(TraitedSpec):
 class Procedure(BaseInterface):
     input_spec = ProcedureInputSpec
     output_spec = ProcedureOutputSpec
+    _version = "0.0.1"
 
     def __init__(self, **inputs: Any):
         super().__init__(**inputs)
@@ -45,6 +51,23 @@ class Procedure(BaseInterface):
         """
         Executes the interface, setting up logging and calling the procedure.
         """
+        finished_file = (
+            Path(self.inputs.logging_directory)
+            / f"{type(self).__name__}-{self._version}.done"
+        )
+        if finished_file.exists():
+            # read the timestamp of the last run from the file
+            with open(finished_file, "r") as f:
+                timestamp = f.read().strip()
+            if not self.inputs.force:
+                self.logger.info(
+                    f"Procedure already ran at {timestamp}. If you want to run it again, set force=True."
+                )
+                return runtime
+            else:
+                self.logger.info(
+                    f"Procedure already ran at {timestamp}. Running again because force=True."
+                )
         # Validate directories and set up logging
         if not isdefined(self.inputs.logging_directory):
             self.inputs.logging_directory = self.inputs.output_directory
@@ -58,9 +81,6 @@ class Procedure(BaseInterface):
         self.run_procedure(**self.inputs.__dict__)
 
         # create another log file, including the timestamp of the finished procedure
-        finished_file = (
-            Path(self.inputs.logging_directory) / f"{type(self).__name__}.done"
-        )
         with open(finished_file, "w") as f:
             f.write(f"{datetime.now()}\n")
 
