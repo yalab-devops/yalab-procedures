@@ -1,6 +1,7 @@
 # src/yalab_procedures/procedures/dicom_to_bids.py
 
 from pathlib import Path
+import shlex
 from subprocess import CalledProcessError, run
 
 from nipype.interfaces.base import (
@@ -39,7 +40,7 @@ class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     input_directory = Directory(
         exists=True,
         mandatory=True,
-        argstr="--files %s/*/*.dcm",
+        argstr="--files '%s'/*/*.dcm",
         desc="Input directory containing DICOM files",
     )
     output_directory = Directory(
@@ -115,6 +116,7 @@ class DicomToBidsProcedure(Procedure, CommandLine):
 
         self.logger.info("Running DicomToBidsProcedure")
         self.infer_session_id()
+        # self.standardize_input_directory()
         self.logger.debug(f"Input attributes: {kwargs}")
 
         # Run the heudiconv command
@@ -146,6 +148,12 @@ class DicomToBidsProcedure(Procedure, CommandLine):
             session_id = Path(self.inputs.input_directory).name.split("_")[-2:]
             session_id = "".join(session_id)
             self.inputs.session_id = session_id
+    
+    def standardize_input_directory(self):
+        """
+        Standardize the input directory path
+        """
+        self.inputs.input_directory = shlex.quote(str(self.inputs.input_directory))
 
     def build_commandline(self) -> str:
         """
