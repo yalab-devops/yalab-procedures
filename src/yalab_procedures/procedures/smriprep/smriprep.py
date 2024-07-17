@@ -17,6 +17,7 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureOutputSpec,
 )
 from yalab_procedures.procedures.smriprep.templates.outputs import SMRIPREP_OUTPUTS
+import os
 
 
 class SmriprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
@@ -45,7 +46,7 @@ class SmriprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     )
     fs_license_file = File(
         exists=True,
-        mandatory=True,
+        mandatory=False,
         argstr="-v %s:/fslicense.txt",
         desc="Path to FreeSurfer license file",
     )
@@ -219,8 +220,10 @@ class SmriprepProcedure(Procedure, CommandLine):
                 )
                 return
 
+        # Locate the FreeSurfer license file
+        self._locate_fs_license_file()
         # Prepare inputs
-        self._prepare_inputs()
+        temp_input_directory = self._prepare_inputs()
         # Run the smriprep command
         command = self.cmdline
         # Log the command
@@ -239,6 +242,25 @@ class SmriprepProcedure(Procedure, CommandLine):
                 result.returncode, command, output=result.stdout, stderr=result.stderr
             )
         self.logger.info("Finished running SmriprepProcedure")
+        # Clean up
+        run(f"rm -rf {temp_input_directory}", shell=True, check=True)
+
+    def _locate_fs_license_file(self):
+        """
+        Locate the FreeSurfer license file
+        """
+        if not isdefined(self.inputs.fs_license_file):
+            fs_home = os.getenv("FREESURFER_HOME")
+            if fs_home is None:
+                raise ValueError(
+                    "FREESURFER_HOME environment variable is not set and fs_license_file is not provided."
+                )
+            fs_license_file = Path(fs_home) / "license.txt"
+            if not fs_license_file.exists():
+                raise ValueError(
+                    f"FreeSurfer license file not found at {fs_license_file}"
+                )
+            self.inputs.fs_license_file = str(Path(fs_home) / "license.txt")
 
     def _prepare_inputs(self):
         """
@@ -246,7 +268,7 @@ class SmriprepProcedure(Procedure, CommandLine):
         """
         work_directory = Path(self.inputs.work_directory)
         input_directory = Path(self.inputs.input_directory)
-        temp_bids = work_directory / "bids"
+        temp_bids = work_directory / self.log_file_path.stem / "bids"
         temp_bids.mkdir(parents=True, exist_ok=True)
         # rsync input directory to work directory
         run(
@@ -261,11 +283,12 @@ class SmriprepProcedure(Procedure, CommandLine):
             "README",
         ]:
             run(
-                f"rsync -av {input_directory / fname} {temp_bids}",
+                f"rsync -azPL {input_directory / fname} {temp_bids}",
                 shell=True,
                 check=True,
             )
         self.inputs.input_directory = temp_bids
+        return temp_bids
 
     @property
     def cmdline(self):
@@ -317,3 +340,13 @@ class SmriprepProcedure(Procedure, CommandLine):
             for session in Path(self.inputs.input_directory).glob("ses-*")
             if session.is_dir()
         ]
+
+
+if __name__ == "__main__":
+    proc = SmriprepProcedure()
+    proc.inputs.input_directory = "/media/storage/yalab-dev/bids"
+    proc.inputs.output_directory = "/media/storage/yalab-dev/derivatives"
+    proc.inputs.work_directory = "/media/storage/yalab-dev/work"
+    proc.inputs.logging_directory = "/media/storage/yalab-dev/logs"
+    proc.inputs.participant_label = "CLMC10"
+    proc.run()
