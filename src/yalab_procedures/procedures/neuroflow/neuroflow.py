@@ -9,7 +9,6 @@ from nipype.interfaces.base import (
     Directory,
     File,
     traits,
-    isdefined,
 )
 
 from yalab_procedures.procedures.base.procedure import (
