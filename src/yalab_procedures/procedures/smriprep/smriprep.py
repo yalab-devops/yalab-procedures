@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from typing import Any, Dict
@@ -17,7 +18,6 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureOutputSpec,
 )
 from yalab_procedures.procedures.smriprep.templates.outputs import SMRIPREP_OUTPUTS
-import os
 
 
 class SmriprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
@@ -305,7 +305,9 @@ class SmriprepProcedure(Procedure, CommandLine):
         )
         return " ".join(allargs)
 
-    def _list_outputs(self) -> Dict[str, str]:
+    def _list_outputs(
+        self, smriprep_outputs: dict = SMRIPREP_OUTPUTS
+    ) -> Dict[str, str]:
         """
         List the outputs of the SmriprepProcedure
         """
@@ -313,9 +315,12 @@ class SmriprepProcedure(Procedure, CommandLine):
         output_directory = Path(self.inputs.output_directory)
         outputs = self._outputs().get()
         outputs["output_directory"] = str(output_directory)
-        for output_source in SMRIPREP_OUTPUTS:
+        for (
+            output_source,
+            output_formats,
+        ) in smriprep_outputs.items():
             search_destination = output_directory / output_source
-            for output, desc in SMRIPREP_OUTPUTS.get(output_source).items():
+            for output, desc in output_formats.items():
                 key = output if output_source != "freesurfer" else f"fs_{output}"
                 template = desc.get(outputs_level) if isinstance(desc, dict) else desc
                 if outputs_level == "session":
