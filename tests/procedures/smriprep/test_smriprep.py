@@ -19,7 +19,14 @@ def smriprep_procedure(temp_dir):
     output_dir = temp_dir / "output"
     logging_dir = temp_dir / "logs"
     working_directory = temp_dir / "working"
-
+    (input_dir / "sub-test").mkdir(exist_ok=True, parents=True)
+    for subdir in [
+        "dataset_description.json",
+        "participants.tsv",
+        "participants.json",
+        "README",
+    ]:
+        (input_dir / subdir).touch()
     input_dir.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
     logging_dir.mkdir(parents=True, exist_ok=True)
@@ -73,3 +80,10 @@ def test_list_outputs(smriprep_procedure):
     assert outputs["output_directory"] == str(
         smriprep_procedure.inputs.output_directory
     )
+
+
+def test_prepare_inputs(smriprep_procedure):
+    smriprep_procedure.setup_logging()
+    temp_bids = smriprep_procedure._prepare_inputs()
+    assert Path(temp_bids).exists()
+    assert smriprep_procedure.inputs.input_directory == str(temp_bids)

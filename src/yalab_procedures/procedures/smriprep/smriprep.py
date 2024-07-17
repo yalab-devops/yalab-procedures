@@ -133,13 +133,6 @@ class SmriprepProcedure(Procedure, CommandLine):
     def __init__(self, **inputs: Any):
         super().__init__(**inputs)
 
-    def _format_cmdline(self):
-        """
-        Format the command line
-        """
-        cmd = [f"{self._cmd}:{self.inputs.smriprep_version} /data /out"]
-        cmd += [self.inputs.analysis_level]
-
     def _parse_mounted_inputs(self):
         """
         Parse mounted inputs
@@ -159,12 +152,7 @@ class SmriprepProcedure(Procedure, CommandLine):
             value = getattr(self.inputs, name)
             if not isdefined(value):
                 continue
-            try:
-                arg = self._format_arg(name, spec, value)
-            except Exception as exc:
-                raise ValueError(
-                    f"Error formatting command line argument '{name}' with value '{value}'"
-                ) from exc
+            arg = self._format_arg(name, spec, value)
             all_args += [arg]
         return all_args
 
@@ -272,7 +260,7 @@ class SmriprepProcedure(Procedure, CommandLine):
         temp_bids.mkdir(parents=True, exist_ok=True)
         # rsync input directory to work directory
         run(
-            f"rsync -av {input_directory}/sub-{self.inputs.participant_label} {temp_bids}",
+            f"rsync -azPL {input_directory}/sub-{self.inputs.participant_label} {temp_bids}",
             shell=True,
             check=True,
         )
@@ -345,13 +333,3 @@ class SmriprepProcedure(Procedure, CommandLine):
             for session in Path(self.inputs.input_directory).glob("ses-*")
             if session.is_dir()
         ]
-
-
-if __name__ == "__main__":
-    proc = SmriprepProcedure()
-    proc.inputs.input_directory = "/media/storage/yalab-dev/bids"
-    proc.inputs.output_directory = "/media/storage/yalab-dev/derivatives"
-    proc.inputs.work_directory = "/media/storage/yalab-dev/work"
-    proc.inputs.logging_directory = "/media/storage/yalab-dev/logs"
-    proc.inputs.participant_label = "CLMC10"
-    proc.run()
