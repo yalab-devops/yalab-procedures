@@ -74,7 +74,7 @@ def test_command_line_construction(dicom_to_bids_procedure):
         f"heudiconv --bids "
         f"-c dcm2niix "
         f"-f {dicom_to_bids_procedure.inputs.heuristic_file} "
-        f"--files {dicom_to_bids_procedure.inputs.input_directory}/*/*.dcm "
+        f"--files '{dicom_to_bids_procedure.inputs.input_directory}'/*/*.dcm "
         f"-o {dicom_to_bids_procedure.inputs.output_directory} "
         f"--overwrite "
         f"-ss {dicom_to_bids_procedure.inputs.session_id} "

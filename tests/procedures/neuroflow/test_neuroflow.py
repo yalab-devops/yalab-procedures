@@ -54,7 +54,7 @@ def test_command_line_construction(neuroflow_procedure):
         f"{neuroflow_procedure.inputs.output_directory} "
         f"{neuroflow_procedure.inputs.google_credentials} "
         f"--atlases fan2016,huang2022 "
-        f"--crop_to_gm --max_bval 1000 --use_smriprep"
+        f"--crop_to_gm --max_bval 1000 --nthreads 1 --use_smriprep"
     ).strip()
     assert cmd == expected_cmd
 
