@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -57,36 +58,56 @@ class Procedure(BaseInterface):
 
         self.setup_logging()
 
-        # set up a "finished" file to keep track of when the procedure was last run
-        finished_file = (
-            Path(self.inputs.logging_directory)
-            / f"{type(self).__name__}-{self._version}.done"
-        )
-        if finished_file.exists():
-            # read the timestamp of the last run from the file
-            with open(finished_file, "r") as f:
-                timestamp = f.read().strip()
-            if not self.inputs.force:
-                self.logger.info(
-                    f"Procedure already ran at {timestamp}. If you want to run it again, set force=True."
-                )
-                return runtime
-            else:
-                self.logger.info(
-                    f"Procedure already ran at {timestamp}. Running again because force=True."
-                )
-
         self.logger.info(
             f"Running procedure with input directory: {self.inputs.input_directory}"
         )
         # Run the custom procedure
         self.run_procedure(**self.inputs.__dict__)
 
-        # create another log file, including the timestamp of the finished procedure
-        with open(finished_file, "w") as f:
-            f.write(f"{datetime.now()}\n")
-
         return runtime
+
+    def log_finished(self, runtime) -> Any:
+        """
+        Logs the completion of the procedure.
+        """
+        # set up a "finished" file to keep track of when the procedure was last run
+        finished_file = (
+            Path(self.inputs.logging_directory)
+            / f"{type(self).__name__}-{self._version}.done.json"
+        )
+        if finished_file.exists():
+            # read the timestamp of the last run from the file
+            with open(finished_file, "r") as f:
+                data = json.load(f)
+                timestamp = data["timestamp"]
+                config = data["config"]
+            # check if the configuration is the same as the current configuration
+            if not self._check_same_configuration(config):
+                self.logger.info(
+                    "Configuration has changed since the last run. Running procedure again."
+                )
+            else:
+                if not self.inputs.force:
+                    self.logger.info(
+                        f"Procedure already ran at {timestamp}. If you want to run it again, set force=True."
+                    )
+                    return runtime
+                else:
+                    self.logger.info(
+                        f"Procedure already ran at {timestamp}. Running again because force=True."
+                    )
+        with open(finished_file, "w") as f:
+            json.dump(
+                {"timestamp": str(datetime.now()), "config": self.inputs.get()}, f
+            )
+
+    def _check_same_configuration(self, config: Dict[str, Any]) -> bool:
+        """
+        Checks if the configuration of the procedure is the same as the provided configuration.
+        """
+        # checks whether the provided configuration is the same as the current configuration
+        current_config = self.inputs.get()
+        return current_config == config
 
     def _list_outputs(self) -> Dict[str, str]:
         """
