@@ -108,6 +108,13 @@ class NeuroflowInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         desc="List of steps to run. Available steps are: " + ", ".join(NEUROFLOW_STEPS),
         sep=",",
     )
+    nthreads = traits.Int(
+        mandatory=False,
+        argstr="--nthreads %d",
+        desc="Number of threads to use",
+        default_value=1,
+        usedefault=True,
+    )
     force = traits.Bool(
         mandatory=False,
         argstr="--force",
