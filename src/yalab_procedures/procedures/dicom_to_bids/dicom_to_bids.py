@@ -1,7 +1,7 @@
 # src/yalab_procedures/procedures/dicom_to_bids.py
 
-from pathlib import Path
 import shlex
+from pathlib import Path
 from subprocess import CalledProcessError, run
 
 from nipype.interfaces.base import (
@@ -148,7 +148,7 @@ class DicomToBidsProcedure(Procedure, CommandLine):
             session_id = Path(self.inputs.input_directory).name.split("_")[-2:]
             session_id = "".join(session_id)
             self.inputs.session_id = session_id
-    
+
     def standardize_input_directory(self):
         """
         Standardize the input directory path
