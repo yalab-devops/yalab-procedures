@@ -104,8 +104,9 @@ class Procedure(BaseInterface):
             )
             # check if the configuration is the same as the current configuration # noqa: E501
             if self.inputs.output_directory == config["output_directory"]:
+                msg = "User requested to regenerate outputs in the same directory. Please change the output directory or set force=True."  # noqa: E501
                 self.logger.error(
-                    "User requested to regenerate outputs in the same directory. Please change the output directory or set force=True."  # noqa: E501
+                    msg,
                 )
                 proceed = False
             else:
