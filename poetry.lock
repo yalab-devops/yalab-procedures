@@ -981,13 +981,13 @@ calculus = ["sympy (>=1.3,<1.10)"]
 
 [[package]]
 name = "fslpy"
-version = "3.20.0"
+version = "3.21.0"
 description = "FSL Python library"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fslpy-3.20.0-py3-none-any.whl", hash = "sha256:b93f6bc5bc5faed497467c6fd534db635a05c03d3af820a76aaea86e64a0a8e8"},
-    {file = "fslpy-3.20.0.tar.gz", hash = "sha256:8e64655594a2ca809ac3f379207831ca3cde1c23d554e5ce1ba710d7bef6e446"},
+    {file = "fslpy-3.21.0-py3-none-any.whl", hash = "sha256:e56f003c991b5cb580533ab64e81ee080e2b1f527e91436c4bb4f662623f8ceb"},
+    {file = "fslpy-3.21.0.tar.gz", hash = "sha256:5f06571d97979fa14b13c882ff9b9371c8f58b64a69c368f5077173c26cf90e5"},
 ]
 
 [package.dependencies]
@@ -1338,13 +1338,13 @@ files = [
 
 [[package]]
 name = "importlib-metadata"
-version = "8.1.0"
+version = "8.2.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_metadata-8.1.0-py3-none-any.whl", hash = "sha256:3cd29f739ed65973840b068e3132135ce954c254d48b5b640484467ef7ab3c8c"},
-    {file = "importlib_metadata-8.1.0.tar.gz", hash = "sha256:fcdcb1d5ead7bdf3dd32657bb94ebe9d2aabfe89a19782ddc32da5041d6ebfb4"},
+    {file = "importlib_metadata-8.2.0-py3-none-any.whl", hash = "sha256:11901fa0c2f97919b288679932bb64febaeacf289d18ac84dd68cb2e74213369"},
+    {file = "importlib_metadata-8.2.0.tar.gz", hash = "sha256:72e8d4399996132204f9a16dcc751af254a48f8d1b20b9ff0f98d4a8f901e73d"},
 ]
 
 [package.dependencies]
@@ -3368,13 +3368,13 @@ testing = ["covdefaults (>=2.3)", "pytest (>=8.2.2)", "pytest-cov (>=5)", "pytes
 
 [[package]]
 name = "pytest"
-version = "8.3.1"
+version = "8.3.2"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-8.3.1-py3-none-any.whl", hash = "sha256:e9600ccf4f563976e2c99fa02c7624ab938296551f280835ee6516df8bc4ae8c"},
-    {file = "pytest-8.3.1.tar.gz", hash = "sha256:7e8e5c5abd6e93cb1cc151f23e57adc31fcf8cfd2a3ff2da63e23f732de35db6"},
+    {file = "pytest-8.3.2-py3-none-any.whl", hash = "sha256:4ba08f9ae7dcf84ded419494d229b48d0903ea6407b030eaec46df5e6a73bba5"},
+    {file = "pytest-8.3.2.tar.gz", hash = "sha256:c132345d12ce551242c87269de812483f5bcc87cdbb4722e48487ba194f9fdce"},
 ]
 
 [package.dependencies]
@@ -5020,4 +5020,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "ecba866bf358dde64c9fe4885df7c0ace8c363fef17f0b278456405fa829d7d2"
+content-hash = "895600c594669ecd39570db8fba3f30994289585aa643d7cdfcc93f1bd38bd92"
