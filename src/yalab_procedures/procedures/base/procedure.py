@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from nipype.interfaces.base import (
     BaseInterface,
@@ -15,7 +15,9 @@ from nipype.interfaces.base import (
 
 
 class ProcedureInputSpec(BaseInterfaceInputSpec):
-    input_directory = Directory(exists=True, mandatory=True, desc="Input directory")
+    input_directory = Directory(
+        exists=True, mandatory=True, desc="Input directory"
+    )  # noqa: E501
     output_directory = Directory(mandatory=True, desc="Output directory")
     logging_directory = Directory(desc="Logging directory")
     logging_level = traits.Enum(
@@ -31,7 +33,7 @@ class ProcedureInputSpec(BaseInterfaceInputSpec):
     force = traits.Bool(
         False,
         usedefault=True,
-        desc="Whether to force the procedure to run even if the output directory already exists.",
+        desc="Whether to force the procedure to run even if the output directory already exists.",  # noqa: E501
     )
 
 
@@ -58,54 +60,82 @@ class Procedure(BaseInterface):
 
         self.setup_logging()
 
+        # Check if the procedure has already been run
+        finished_file, proceed = self._check_old_runs_finished()
+        if not proceed:
+            return runtime
+
         self.logger.info(
-            f"Running procedure with input directory: {self.inputs.input_directory}"
+            f"Running procedure with input directory: {self.inputs.input_directory}"  # noqa: E501
         )
         # Run the custom procedure
         self.run_procedure(**self.inputs.__dict__)
+        self.logger.info(
+            f"Procedure completed. Output directory: {self.inputs.output_directory}"  # noqa: E501
+        )
+        self._write_finished_file(finished_file)
 
         return runtime
 
-    def log_finished(self, runtime) -> Any:
+    def _check_old_runs_finished(self) -> Any:
         """
         Logs the completion of the procedure.
         """
-        # set up a "finished" file to keep track of when the procedure was last run
+        # set up a "finished" file to keep track of when the procedure was last run # noqa: E501
         finished_file = (
             Path(self.inputs.logging_directory)
             / f"{type(self).__name__}-{self._version}.done.json"
         )
+        proceed = True
         if finished_file.exists():
+            if self.inputs.force:
+                self.logger.info(
+                    f"Removing {finished_file} because force=True. Will run procedure again."  # noqa: E501
+                )
+                finished_file.unlink()
+                return finished_file, proceed
             # read the timestamp of the last run from the file
             with open(finished_file, "r") as f:
                 data = json.load(f)
                 timestamp = data["timestamp"]
                 config = data["config"]
-            # check if the configuration is the same as the current configuration
-            if not self._check_same_configuration(config):
-                self.logger.info(
-                    "Configuration has changed since the last run. Running procedure again."
+            self.logger.info(
+                f"Procedure was last run on {timestamp}. Checking if the configuration is the same."  # noqa: E501
+            )
+            # check if the configuration is the same as the current configuration # noqa: E501
+            if self.inputs.output_directory == config["output_directory"]:
+                msg = "User requested to regenerate outputs in the same directory. Please change the output directory or set force=True."  # noqa: E501
+                self.logger.error(
+                    msg,
                 )
+                proceed = False
             else:
-                if not self.inputs.force:
-                    self.logger.info(
-                        f"Procedure already ran at {timestamp}. If you want to run it again, set force=True."
-                    )
-                    return runtime
-                else:
-                    self.logger.info(
-                        f"Procedure already ran at {timestamp}. Running again because force=True."
-                    )
+                proceed = True
+        return finished_file, proceed
+
+    def _write_finished_file(self, finished_file: Union[str, Path]):
+        """
+        Writes a "finished" file to keep track of when the procedure was last run. # noqa: E501
+
+        Parameters
+        ----------
+        finished_file : Union[str, Path]
+            The path to the finished file.
+        """
         with open(finished_file, "w") as f:
             json.dump(
-                {"timestamp": str(datetime.now()), "config": self.inputs.get()}, f
+                {
+                    "timestamp": str(datetime.now()),
+                    "config": self.inputs.get(),
+                },
+                f,  # noqa: E501
             )
 
     def _check_same_configuration(self, config: Dict[str, Any]) -> bool:
         """
-        Checks if the configuration of the procedure is the same as the provided configuration.
+        Checks if the configuration of the procedure is the same as the provided configuration. # noqa: E501
         """
-        # checks whether the provided configuration is the same as the current configuration
+        # checks whether the provided configuration is the same as the current configuration # noqa: E501
         current_config = self.inputs.get()
         return current_config == config
 
