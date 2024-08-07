@@ -56,7 +56,9 @@ class Procedure(BaseInterface):
         """
         # Validate directories and set up logging
         if not isdefined(self.inputs.logging_directory):
-            self.inputs.logging_directory = self.inputs.output_directory
+            self.inputs.logging_directory = (
+                Path(self.inputs.output_directory).parent / "logs"
+            )
 
         self.setup_logging()
 
@@ -69,7 +71,7 @@ class Procedure(BaseInterface):
             f"Running procedure with input directory: {self.inputs.input_directory}"  # noqa: E501
         )
         # Run the custom procedure
-        self.run_procedure(**self.inputs.__dict__)
+        self.run_procedure(**self.inputs.get())
         self.logger.info(
             f"Procedure completed. Output directory: {self.inputs.output_directory}"  # noqa: E501
         )
@@ -95,7 +97,7 @@ class Procedure(BaseInterface):
                 finished_file.unlink()
                 return finished_file, proceed
             # read the timestamp of the last run from the file
-            with open(finished_file, "r") as f:
+            with open(str(finished_file), "r") as f:
                 data = json.load(f)
                 timestamp = data["timestamp"]
                 config = data["config"]
@@ -122,13 +124,20 @@ class Procedure(BaseInterface):
         finished_file : Union[str, Path]
             The path to the finished file.
         """
-        with open(finished_file, "w") as f:
+        config_to_save = {}
+        # Fix JSON serialization issues
+        for key, value in self.inputs.get().items():
+            if isinstance(value, Path):
+                config_to_save[key] = str(value)
+            elif not isdefined(value):
+                config_to_save[key] = None
+            else:
+                config_to_save[key] = value
+        with open(str(finished_file), "w") as f:
             json.dump(
-                {
-                    "timestamp": str(datetime.now()),
-                    "config": self.inputs.get(),
-                },
+                {"timestamp": str(datetime.now()), "config": config_to_save},
                 f,  # noqa: E501
+                indent=6,
             )
 
     def _check_same_configuration(self, config: Dict[str, Any]) -> bool:
