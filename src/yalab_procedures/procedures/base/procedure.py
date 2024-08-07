@@ -130,7 +130,7 @@ class Procedure(BaseInterface):
             if isinstance(value, Path):
                 config_to_save[key] = str(value)
             elif not isdefined(value):
-                config_to_save[key] = None
+                config_to_save[key] = None  # type: ignore[assignment]
             else:
                 config_to_save[key] = value
         with open(str(finished_file), "w") as f:
