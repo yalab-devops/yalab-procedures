@@ -790,6 +790,24 @@ files = [
 ]
 
 [[package]]
+name = "doc8"
+version = "1.1.1"
+description = "Style checker for Sphinx (or other) RST documentation"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "doc8-1.1.1-py3-none-any.whl", hash = "sha256:e493aa3f36820197c49f407583521bb76a0fde4fffbcd0e092be946ff95931ac"},
+    {file = "doc8-1.1.1.tar.gz", hash = "sha256:d97a93e8f5a2efc4713a0804657dedad83745cca4cd1d88de9186f77f9776004"},
+]
+
+[package.dependencies]
+docutils = ">=0.19,<0.21"
+Pygments = "*"
+restructuredtext-lint = ">=0.7"
+stevedore = "*"
+tomli = {version = "*", markers = "python_version < \"3.11\""}
+
+[[package]]
 name = "docopt"
 version = "0.6.2"
 description = "Pythonic argument parser, that will make you smile"
@@ -889,6 +907,23 @@ files = [
 mccabe = ">=0.7.0,<0.8.0"
 pycodestyle = ">=2.12.0,<2.13.0"
 pyflakes = ">=3.2.0,<3.3.0"
+
+[[package]]
+name = "flake8-pyproject"
+version = "1.2.3"
+description = "Flake8 plug-in loading the configuration from pyproject.toml"
+optional = false
+python-versions = ">= 3.6"
+files = [
+    {file = "flake8_pyproject-1.2.3-py3-none-any.whl", hash = "sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a"},
+]
+
+[package.dependencies]
+Flake8 = ">=5"
+TOMLi = {version = "*", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["pyTest", "pyTest-cov"]
 
 [[package]]
 name = "fonttools"
@@ -1760,22 +1795,28 @@ files = [
 
 [[package]]
 name = "keprep"
-version = "0.1.2"
+version = "0.2.0"
 description = "Minimally preprocessing TheBase dMRI data."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "keprep-0.1.2-py3-none-any.whl", hash = "sha256:11a13a32798196abfef38f41a8635b2951ce99724bebb63e8bc3fd4ddd6bd6a5"},
-    {file = "keprep-0.1.2.tar.gz", hash = "sha256:0de237ab564e03bab763fbfc0d7f3366ff87ba4865de76130df969c4f4c00075"},
+    {file = "keprep-0.2.0-py3-none-any.whl", hash = "sha256:fc5e2785ecc8d449864943e0b60e8bb0b2578f87eaafffe97795b884644be057"},
+    {file = "keprep-0.2.0.tar.gz", hash = "sha256:72c2c37b92097886e77959a949d1afa17aed9a089eb76e8ad7de21b8abcc944a"},
 ]
 
 [package.dependencies]
+dipy = ">=1.9.0,<2.0.0"
+doc8 = ">=1.1.1,<2.0.0"
+flake8-pyproject = ">=1.2.3,<2.0.0"
 nipype = ">=1.8.6,<2.0.0"
+nireports = ">=23.2.1,<24.0.0"
 niworkflows = ">=1.8.1,<2.0.0"
 pre-commit = ">=3.3.3,<4.0.0"
 psutil = ">=5.9.5,<6.0.0"
+pytest = ">=8.3.2,<9.0.0"
 pyupgrade = ">=3.9.0,<4.0.0"
 sdcflows = ">=2.5.1,<3.0.0"
+setuptools = ">=72.1.0,<73.0.0"
 smriprep = ">=0.12.1,<0.13.0"
 templateflow = ">=23.0.0,<24.0.0"
 toml = ">=0.10.2,<0.11.0"
@@ -2598,6 +2639,39 @@ tests = ["codecov", "coverage (<5)", "pytest", "pytest-cov", "pytest-doctestplus
 xvfbwrapper = ["xvfbwrapper"]
 
 [[package]]
+name = "nireports"
+version = "23.2.1"
+description = "NiReports - The Visual Report System (VRS) of NiPreps"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "nireports-23.2.1-py3-none-any.whl", hash = "sha256:2e0b3b1c4605dc01d4c51fb4ec17f1c23687c5abb75fbcdfdf1ec0dd76d81b55"},
+    {file = "nireports-23.2.1.tar.gz", hash = "sha256:08f066bbf4d88f52497936a83d4560f138ec9e43314301be291da8c56e141b77"},
+]
+
+[package.dependencies]
+importlib-resources = {version = ">=5.12", markers = "python_version < \"3.12\""}
+matplotlib = ">=3.4.2"
+nibabel = ">=3.0.1"
+nilearn = ">=0.5.2"
+nipype = "*"
+numpy = "*"
+pandas = "*"
+pybids = "*"
+pyyaml = "*"
+seaborn = "*"
+svgutils = ">=0.3.4"
+templateflow = "*"
+
+[package.extras]
+all = ["black (>=22.3.0,<22.4.0)", "coverage", "flake8-pyproject", "furo (>=2021.10.09,<2021.11.0)", "isort (>=5.10.1,<5.11.0)", "matplotlib", "pre-commit", "pydot (>=1.2.3)", "pydotplus", "pytest", "pytest-cov", "pytest-env", "pytest-xdist", "sphinx", "sphinx (>=4.0,<5.0)", "sphinxcontrib-apidoc", "sphinxcontrib-napoleon"]
+dev = ["black (>=22.3.0,<22.4.0)", "flake8-pyproject", "isort (>=5.10.1,<5.11.0)", "pre-commit"]
+doc = ["furo (>=2021.10.09,<2021.11.0)", "pydot (>=1.2.3)", "pydotplus", "sphinx (>=4.0,<5.0)", "sphinxcontrib-apidoc", "sphinxcontrib-napoleon"]
+docs = ["furo (>=2021.10.09,<2021.11.0)", "pydot (>=1.2.3)", "pydotplus", "sphinx (>=4.0,<5.0)", "sphinxcontrib-apidoc", "sphinxcontrib-napoleon"]
+test = ["coverage", "matplotlib", "pytest", "pytest-cov", "pytest-env", "pytest-xdist", "sphinx"]
+tests = ["coverage", "matplotlib", "pytest", "pytest-cov", "pytest-env", "pytest-xdist", "sphinx"]
+
+[[package]]
 name = "nitransforms"
 version = "23.0.1"
 description = "NiTransforms -- Neuroimaging spatial transforms in Python."
@@ -2889,6 +2963,17 @@ python-versions = ">=3.8"
 files = [
     {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
     {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
+]
+
+[[package]]
+name = "pbr"
+version = "6.0.0"
+description = "Python Build Reasonableness"
+optional = false
+python-versions = ">=2.6"
+files = [
+    {file = "pbr-6.0.0-py2.py3-none-any.whl", hash = "sha256:4a7317d5e3b17a3dccb6a8cfe67dab65b20551404c52c8ed41279fa4f0cb4cda"},
+    {file = "pbr-6.0.0.tar.gz", hash = "sha256:d1377122a5a00e2f940ee482999518efe16d745d423a670c27773dfbc3c9a7d9"},
 ]
 
 [[package]]
@@ -3750,6 +3835,19 @@ files = [
 requests = ">=2.0.1,<3.0.0"
 
 [[package]]
+name = "restructuredtext-lint"
+version = "1.4.0"
+description = "reStructuredText linter"
+optional = false
+python-versions = "*"
+files = [
+    {file = "restructuredtext_lint-1.4.0.tar.gz", hash = "sha256:1b235c0c922341ab6c530390892eb9e92f90b9b75046063e047cacfb0f050c45"},
+]
+
+[package.dependencies]
+docutils = ">=0.11,<1.0"
+
+[[package]]
 name = "rfc3986"
 version = "2.0.0"
 description = "Validating URI References per RFC 3986"
@@ -4029,13 +4127,13 @@ jeepney = ">=0.6"
 
 [[package]]
 name = "setuptools"
-version = "71.1.0"
+version = "72.1.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "setuptools-71.1.0-py3-none-any.whl", hash = "sha256:33874fdc59b3188304b2e7c80d9029097ea31627180896fb549c578ceb8a0855"},
-    {file = "setuptools-71.1.0.tar.gz", hash = "sha256:032d42ee9fb536e33087fb66cac5f840eb9391ed05637b3f2a76a7c8fb477936"},
+    {file = "setuptools-72.1.0-py3-none-any.whl", hash = "sha256:5a03e1860cf56bb6ef48ce186b0e557fdba433237481a9a625176c2831be15d1"},
+    {file = "setuptools-72.1.0.tar.gz", hash = "sha256:8d243eff56d095e5817f796ede6ae32941278f542e0f941867cc05ae52b162ec"},
 ]
 
 [package.extras]
@@ -4518,6 +4616,20 @@ pure-eval = "*"
 
 [package.extras]
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
+
+[[package]]
+name = "stevedore"
+version = "5.2.0"
+description = "Manage dynamic plugins for Python applications"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "stevedore-5.2.0-py3-none-any.whl", hash = "sha256:1c15d95766ca0569cad14cb6272d4d31dae66b011a929d7c18219c176ea1b5c9"},
+    {file = "stevedore-5.2.0.tar.gz", hash = "sha256:46b93ca40e1114cea93d738a6c1e365396981bb6bb78c27045b7587c9473544d"},
+]
+
+[package.dependencies]
+pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 
 [[package]]
 name = "svgutils"
@@ -5020,4 +5132,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "895600c594669ecd39570db8fba3f30994289585aa643d7cdfcc93f1bd38bd92"
+content-hash = "5052546c8dd1afdd18db36a7b1ec5be521346e36528a4df0c209f1fb8da0c7ec"
