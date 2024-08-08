@@ -1,11 +1,15 @@
 import os
+import os.path as op
 from pathlib import Path
 from typing import Any
 
-from keprep import config
+from keprep import __version__ as keprep_version
+from keprep import config, data
 from keprep.config import init_spaces
+from keprep.data.quality_assurance.reports import build_boilerplate, run_reports
 from keprep.workflows.base.workflow import init_keprep_wf
 from nipype.interfaces.base import Directory, File, isdefined, traits
+from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 
 from yalab_procedures.procedures.base.procedure import (
     Procedure,
@@ -29,7 +33,7 @@ class KePrepInputSpec(ProcedureInputSpec):
     output_directory = Directory(
         exists=False,
         mandatory=True,
-        desc="A path where anatomical derivatives are found to fast-track *sMRIPrep*.",
+        desc="Path to store outputs of KePrep.",
     )
     anat_derivatives = Directory(
         exists=False,
@@ -143,6 +147,9 @@ class KePrepInputSpec(ProcedureInputSpec):
         usedefault=True,
         desc="Whether to stop on first crash",
     )
+    write_graph = traits.Bool(
+        False, usedefault=True, desc="Whether to write the workflow's graph"
+    )
     force = traits.Bool(
         False,
         usedefault=True,
@@ -152,32 +159,10 @@ class KePrepInputSpec(ProcedureInputSpec):
 
 class KePrepOutputSpec(ProcedureOutputSpec):
     """
-    Output specification for the SmriprepProcedure
+    Output specification for the KePrepProcedure
     """
 
-    # T1w-related files
-    preprocessed_T1w = File(desc="Preprocessed T1w image")
-    brain_mask = File(desc="Brain mask")
-    MNI_preprocessed_T1w = File(desc="MNI preprocessed T1w image")
-    MNI_brain_mask = File(desc="MNI brain mask")
-    # Transformations
-    mni_to_native_transform = File(desc="MNI to native transform")
-    native_to_mni_transform = File(desc="Native to MNI transform")
-    fsnative_to_native_transform = File(desc="Freesurfer native to native transform")
-    native_to_fsnative_transform = File(desc="Native to freesurfer native transform")
-    # Segmentation
-    segmentation = File(desc="Segmentation")
-    probseg_gm = File(desc="Probabilistic segmentation of gray matter")
-    probseg_wm = File(desc="Probabilistic segmentation of white matter")
-    probseg_csf = File(desc="Probabilistic segmentation of cerebrospinal fluid")
-    # FreeSurfer
-    fs_fsaverage = File(desc="fsaverage")
-    fs_T1w = File(desc="T1w")
-    fs_brainmask = File(desc="Brain mask")
-    fs_brain = File(desc="Dilated brain mask")
-    fs_wm = File(desc="White matter")
-    fs_lh_pial = File(desc="Left hemisphere pial surface")
-    fs_rh_pial = File(desc="Right hemisphere pial surface")
+    output_directory = Directory(desc="KePrep output directory")
 
 
 class KePrepProcedure(Procedure):
@@ -187,7 +172,7 @@ class KePrepProcedure(Procedure):
 
     input_spec = KePrepInputSpec
     output_spec = KePrepOutputSpec
-    _version = "0.0.1"
+    _version = keprep_version
 
     def __init__(self, **inputs: Any):
         super().__init__(**inputs)
@@ -231,7 +216,7 @@ class KePrepProcedure(Procedure):
             If the command fails to run. The error message will be logged.
         """
 
-        self.logger.info("Running SmriprepProcedure")
+        self.logger.info("Running KePrepProcedure")
         self.logger.debug(f"Input attributes: {kwargs}")
 
         # Locate the FreeSurfer license file
@@ -243,8 +228,31 @@ class KePrepProcedure(Procedure):
 
         # Run the workflow
         workflow = init_keprep_wf()
-        workflow.write_graph(graph2use="colored", format="png", simple_form=True)
+        if self.inputs.write_graph:
+            workflow.write_graph(graph2use="colored", format="png", simple_form=True)
         workflow.run()
+        self._generate_reports(workflow=workflow, configuration_dict=configuration_dict)
+
+    def _generate_reports(self, workflow: Workflow, configuration_dict: dict):
+        # Generate reports
+        build_boilerplate(config_file=configuration_dict, workflow=workflow)
+        bootstrap_file = data.load("quality_assurance/templates/reports-spec.yml")
+        run_uuid = config.execution.run_uuid
+        for participant_label in self.inputs.participant_label:
+            err = run_reports(
+                config.execution.keprep_dir,
+                participant_label,
+                run_uuid,
+                bootstrap_file=bootstrap_file,
+                out_filename="report.html",
+                reportlets_dir=config.execution.keprep_dir,
+                errorname=f"report-{run_uuid}-{participant_label}.err",
+                subject=participant_label,
+            )
+            if err:
+                self.logger.warn(
+                    f"Failed to generate report for subject {participant_label}"
+                )
 
     # function to avoid rerunning if force is not set
     def _check_output_directory(self):
@@ -279,35 +287,10 @@ class KePrepProcedure(Procedure):
                 )
             self.inputs.fs_license_file = str(Path(fs_home) / "license.txt")
 
-    # def _list_outputs(
-    #     self, smriprep_outputs: dict = SMRIPREP_OUTPUTS
-    # ) -> Dict[str, str]:
-    #     """
-    #     List the outputs of the SmriprepProcedure
-    #     """
-    #     outputs_level = "session" if len(self.sessions) == 1 else "subject"
-    #     output_directory = Path(self.inputs.output_directory)
-    #     outputs = self._outputs().get()
-    #     outputs["output_directory"] = str(output_directory)
-    #     for (
-    #         output_source,
-    #         output_formats,
-    #     ) in smriprep_outputs.items():
-    #         search_destination = output_directory / output_source
-    #         for output, desc in output_formats.items():
-    #             key = output if output_source != "freesurfer" else f"fs_{output}"
-    #             template = desc.get(outputs_level) if isinstance(desc, dict) else desc
-    #             if outputs_level == "session":
-    #                 value = template.format(
-    #                     subject=self.inputs.participant_label,
-    #                     session=self.sessions[0],
-    #                 )
-    #             else:
-    #                 value = template.format(subject=self.inputs.participant_label)
-    #             outputs[key] = str(search_destination / value)
-    #     if hasattr(self, "log_file_path"):
-    #         outputs["log_file"] = str(self.log_file_path)
-    #     return outputs
+    def _list_outputs(self):
+        outputs = self.output_spec().get()
+        outputs["output_directory"] = op.abspath(self.inputs.output_directory)
+        return outputs
 
     @property
     def sessions(self):
