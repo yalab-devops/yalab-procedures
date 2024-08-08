@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from yalab_procedures.procedures.keprep_procedure.keprep import KePrepProcedure
+from yalab_procedures.procedures.keprep_procedure.keprep_procedure import (
+    KePrepProcedure,
+)
 
 
 @pytest.fixture
