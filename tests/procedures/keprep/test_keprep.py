@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from yalab_procedures.procedures.keprep.keprep import KePrepProcedure
+from yalab_procedures.procedures.keprep_procedure.keprep import KePrepProcedure
 
 
 @pytest.fixture

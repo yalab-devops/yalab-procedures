@@ -3,7 +3,7 @@ import os.path as op
 from pathlib import Path
 from typing import Any
 
-from keprep import __version__ as keprep_version
+import keprep
 from keprep import config, data
 from keprep.config import init_spaces
 from keprep.data.quality_assurance.reports import build_boilerplate, run_reports
@@ -16,7 +16,7 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureInputSpec,
     ProcedureOutputSpec,
 )
-from yalab_procedures.procedures.keprep.templates.inputs import INPUTS_MAPPING
+from yalab_procedures.procedures.keprep_procedure.templates.inputs import INPUTS_MAPPING
 
 
 class KePrepInputSpec(ProcedureInputSpec):
@@ -172,7 +172,7 @@ class KePrepProcedure(Procedure):
 
     input_spec = KePrepInputSpec
     output_spec = KePrepOutputSpec
-    _version = keprep_version
+    _version = keprep.__version__
 
     def __init__(self, **inputs: Any):
         super().__init__(**inputs)
