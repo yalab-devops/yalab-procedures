@@ -1,13 +1,15 @@
 import os
+import os.path as op
 from pathlib import Path
 from typing import Any
 
-from keprep import config
+from keprep import __version__ as keprep_version
+from keprep import config, data
 from keprep.config import init_spaces
+from keprep.data.quality_assurance.reports import build_boilerplate, run_reports
 from keprep.workflows.base.workflow import init_keprep_wf
 from nipype.interfaces.base import Directory, File, isdefined, traits
-from keprep.data.quality_assurance.reports import run_reports, build_boilerplate
-from keprep import data, __version__ as keprep_version
+from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 
 from yalab_procedures.procedures.base.procedure import (
     Procedure,
@@ -15,8 +17,6 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureOutputSpec,
 )
 from yalab_procedures.procedures.keprep.templates.inputs import INPUTS_MAPPING
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-import os.path as op
 
 
 class KePrepInputSpec(ProcedureInputSpec):
@@ -33,7 +33,7 @@ class KePrepInputSpec(ProcedureInputSpec):
     output_directory = Directory(
         exists=False,
         mandatory=True,
-        desc="A path where anatomical derivatives are found to fast-track *sMRIPrep*.",
+        desc="Path to store outputs of KePrep.",
     )
     anat_derivatives = Directory(
         exists=False,
