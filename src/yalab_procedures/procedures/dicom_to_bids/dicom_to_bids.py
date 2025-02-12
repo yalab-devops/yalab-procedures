@@ -59,8 +59,8 @@ class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     overwrite = traits.Bool(
         True, usedefault=True, argstr="--overwrite", desc="Overwrite existing files"
     )
-    bids = traits.Bool(
-        True, usedefault=True, argstr="--bids", desc="Organize output in BIDS format"
+    bids = traits.Enum(
+        "notop", default="notop", usedefault=True, argstr="--bids %s", desc="Organize output in BIDS format"
     )
     infer_session_id = traits.Bool(
         True,
