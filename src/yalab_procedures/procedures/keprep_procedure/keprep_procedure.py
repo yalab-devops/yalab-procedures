@@ -294,17 +294,18 @@ class KePrepProcedure(Procedure):
         return outputs
 
     def _set_up_directories(self):
-        base_dir = Path(self.inputs.output_directory) / f"sub-{self.inputs.subject_id}"
-        (base_dir / "figures").mkdir(parents=True, exist_ok=True)
-        (base_dir / "logs").mkdir(parents=True, exist_ok=True)
-        for session in self.sessions:
-            (base_dir / f"ses-{session}").mkdir(parents=True, exist_ok=True)
-        if len(self.sessions) > 1:
-            (base_dir / "anat").mkdir(parents=True, exist_ok=True)
-        else:
-            (base_dir / f"ses-{self.sessions[0]}" / "anat").mkdir(
-                parents=True, exist_ok=True
-            )
+        for participant_label in self.inputs.participant_label:
+            base_dir = Path(self.inputs.output_directory) / f"sub-{participant_label}"
+            (base_dir / "figures").mkdir(parents=True, exist_ok=True)
+            (base_dir / "logs").mkdir(parents=True, exist_ok=True)
+            for session in self.sessions:
+                (base_dir / f"ses-{session}").mkdir(parents=True, exist_ok=True)
+            if len(self.sessions) > 1:
+                (base_dir / "anat").mkdir(parents=True, exist_ok=True)
+            else:
+                (base_dir / f"ses-{self.sessions[0]}" / "anat").mkdir(
+                    parents=True, exist_ok=True
+                )
 
     @property
     def sessions(self):
