@@ -226,7 +226,7 @@ class KePrepProcedure(Procedure):
         config.from_dict(configuration_dict)
         init_spaces()
         # Set up directories
-        self._set_up_directories()
+        # self._set_up_directories()
         # Run the workflow
         workflow = init_keprep_wf()
         if self.inputs.write_graph:
