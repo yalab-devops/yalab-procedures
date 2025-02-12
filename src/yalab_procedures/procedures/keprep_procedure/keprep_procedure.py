@@ -225,7 +225,8 @@ class KePrepProcedure(Procedure):
         configuration_dict = self._setup_config_toml()
         config.from_dict(configuration_dict)
         init_spaces()
-
+        # Set up directories
+        self._set_up_directories()
         # Run the workflow
         workflow = init_keprep_wf()
         if self.inputs.write_graph:
@@ -291,6 +292,19 @@ class KePrepProcedure(Procedure):
         outputs = self.output_spec().get()
         outputs["output_directory"] = op.abspath(self.inputs.output_directory)
         return outputs
+
+    def _set_up_directories(self):
+        base_dir = Path(self.inputs.output_directory) / f"sub-{self.inputs.subject_id}"
+        (base_dir / "figures").mkdir(parents=True, exist_ok=True)
+        (base_dir / "logs").mkdir(parents=True, exist_ok=True)
+        for session in self.sessions:
+            (base_dir / f"ses-{session}").mkdir(parents=True, exist_ok=True)
+        if len(self.sessions) > 1:
+            (base_dir / "anat").mkdir(parents=True, exist_ok=True)
+        else:
+            (base_dir / f"ses-{self.sessions[0]}" / "anat").mkdir(
+                parents=True, exist_ok=True
+            )
 
     @property
     def sessions(self):
