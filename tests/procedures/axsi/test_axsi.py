@@ -60,7 +60,7 @@ def test_command_line_construction(axsi_procedure):
     cmd = axsi_procedure.cmdline
     print(cmd)
     expected_cmd = (
-        f"conda run -n axsi AxSI_main.py "
+        f"axsi-main "
         f"--subj-folder {axsi_procedure.inputs.output_directory} "
         f"--run-name {axsi_procedure.inputs.run_name} "
         f"--data {axsi_procedure.inputs.data} "

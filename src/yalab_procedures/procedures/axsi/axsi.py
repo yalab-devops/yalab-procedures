@@ -200,7 +200,7 @@ class AxsiProcedure(Procedure, CommandLine):
     >>> axsi.inputs.num_processes_axsi = 35
     >>> axsi.inputs.debug_mode = True
     >>> axsi.inputs.cmdline
-    'conda run -n axsi AxSI_main.py ' \
+    'axsi-main ' \
                                    '--subj-folder /path/to/axsi/output' \
                                    '--run-name "subject_id-session_id"' \
                                    '--bval "/path/to/bval_input_file" ' \
@@ -216,7 +216,7 @@ class AxsiProcedure(Procedure, CommandLine):
 
     """
 
-    _cmd = "conda run -n axsi AxSI_main.py"
+    _cmd = "axsi-main"
     input_spec = AxsiInputSpec
     output_spec = AxsiOutputSpec
     _version = "0.0.1"

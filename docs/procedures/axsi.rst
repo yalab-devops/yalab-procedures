@@ -178,7 +178,7 @@ Example
     >>> axsi.inputs.num_processes_axsi = 35
     >>> axsi.inputs.debug_mode = True
     >>> axsi.inputs.cmdline
-    'conda run -n axsi AxSI_main.py ' \
+    'axsi-main.py ' \
                                    '--subj-folder /path/to/axsi/output' \
                                    '--run-name "subject_id-session_id"' \
                                    '--bval "/path/to/bval_input_file" ' \
@@ -202,4 +202,4 @@ Conclusion
 
 The `AxsiProcedure` class provides a robust and flexible framework for extending MRI data processing capabilities. By leveraging the `AxSI` package, researchers can perform comprehensive analyses on structural and diffusion MRI data efficiently.
 
-.. _`AxSI`: https://pypi.org/project/AxSI/
+.. _`AxSI`: https://axsi.readthedocs.io/en/latest/
