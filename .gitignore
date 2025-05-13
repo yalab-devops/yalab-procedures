@@ -110,3 +110,5 @@ ENV/
 
 # trials
 trials/
+bids_filters.json
+runner_kepost*

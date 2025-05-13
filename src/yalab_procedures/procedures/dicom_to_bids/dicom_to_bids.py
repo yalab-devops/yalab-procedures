@@ -56,11 +56,24 @@ class DicomToBidsInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         argstr="-c %s",
         desc="DICOM converter to use",
     )
+    grouping = traits.Enum(
+        "all",
+        "studyUID",
+        "accession_number",
+        "custom",
+        usedefault=True,
+        argstr="-g %s",
+        desc="Grouping strategy for DICOM files",
+    )
     overwrite = traits.Bool(
         True, usedefault=True, argstr="--overwrite", desc="Overwrite existing files"
     )
     bids = traits.Enum(
-        "notop", default="notop", usedefault=True, argstr="--bids %s", desc="Organize output in BIDS format"
+        "notop",
+        default="notop",
+        usedefault=True,
+        argstr="--bids %s",
+        desc="Organize output in BIDS format",
     )
     infer_session_id = traits.Bool(
         True,
