@@ -128,6 +128,18 @@ def infotodict(
     music3_sbref = create_key(
         "{bids_subject_session_dir}/func/{bids_subject_session_prefix}_task-music3_sbref"
     )
+    movement1 = create_key(
+        "{bids_subject_session_dir}/func/{bids_subject_session_prefix}_task-movement1_bold"
+    )
+    movement1_sbref = create_key(
+        "{bids_subject_session_dir}/func/{bids_subject_session_prefix}_task-movement1_sbref"
+    )
+    movement2 = create_key(
+        "{bids_subject_session_dir}/func/{bids_subject_session_prefix}_task-movement2_bold"
+    )
+    movement2_sbref = create_key(
+        "{bids_subject_session_dir}/func/{bids_subject_session_prefix}_task-movement2_sbref"
+    )
     emotionalnback = create_key(
         "{bids_subject_session_dir}/func/{bids_subject_session_prefix}_task-emotionalnback_bold"
     )
@@ -169,6 +181,10 @@ def infotodict(
         music2_sbref: [],
         music3: [],
         music3_sbref: [],
+        movement1: [],
+        movement1_sbref: [],
+        movement2: [],
+        movement2_sbref: [],
         emotionalnback: [],
         emotionalnback_sbref: [],
     }
@@ -251,6 +267,14 @@ def infotodict(
             info[music3].append(s.series_id)
         elif "fMRI_Music3_AP_SBRef" in s.protocol_name:
             info[music3_sbref].append(s.series_id)
+        elif ("fMRI_Music_Movement1_AP" in s.protocol_name) and ("SBRef" not in s.protocol_name):
+            info[movement1].append(s.series_id)
+        elif "fMRI_Music_Movement1_AP_SBRef" in s.protocol_name:
+            info[movement1_sbref].append(s.series_id)
+        elif ("fMRI_Music_Movement2_AP" in s.protocol_name) and ("SBRef" not in s.protocol_name):
+            info[movement2].append(s.series_id)
+        elif "fMRI_Music_Movement2_AP_SBRef" in s.protocol_name:
+            info[movement2_sbref].append(s.series_id)
         elif "fMRI_EmotionalNBack_AP" in s.protocol_name:
             info[emotionalnback].append(s.series_id)
         elif "fMRI_EmotionalNBack_AP_SBRef" in s.protocol_name:
