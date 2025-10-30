@@ -283,11 +283,12 @@ class QsiprepProcedure(Procedure, CommandLine):
         temp_bids = work_directory / self.log_file_path.stem / "bids"
         temp_bids.mkdir(parents=True, exist_ok=True)
         # rsync input directory to work directory
-        run(
-            f"rsync -azPL {input_directory}/sub-{self.inputs.participant_label} {temp_bids}",
-            shell=True,
-            check=True,
-        )
+        for participant in self.inputs.participant_label:
+            run(
+                f"rsync -azPL {input_directory}/sub-{participant} {temp_bids}",
+                shell=True,
+                check=True,
+            )
         for fname in [
             "dataset_description.json",
             "participants.tsv",
