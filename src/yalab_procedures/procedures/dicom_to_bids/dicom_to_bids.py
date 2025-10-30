@@ -18,6 +18,9 @@ from yalab_procedures.procedures.base.procedure import (
     ProcedureInputSpec,
     ProcedureOutputSpec,
 )
+from yalab_procedures.procedures.dicom_to_bids.templates.post_heudiconv import (
+    create_pa_epi_workflow,
+)
 
 DEFAULT_HEURISTIC = Path(__file__).parent / "templates" / "heuristic.py"
 
@@ -141,6 +144,7 @@ class DicomToBidsProcedure(Procedure, CommandLine):
             capture_output=True,
             text=True,
         )
+        self.post_heudiconv_fieldmap_correction()
         self.logger.info(result.stdout)
         if (
             result.stderr
@@ -151,6 +155,20 @@ class DicomToBidsProcedure(Procedure, CommandLine):
                 result.returncode, command, output=result.stdout, stderr=result.stderr
             )
         self.logger.info("Finished running DicomToBidsProcedure")
+
+    def post_heudiconv_fieldmap_correction(self):
+        """
+        Post-process fieldmap correction if needed
+        """
+        wf = create_pa_epi_workflow(
+            name="post_heudiconv_fieldmap_correction",
+            bids_dir=str(self.inputs.output_directory),
+            subject_id=self.inputs.subject_id,
+            session_id=(
+                self.inputs.session_id if isdefined(self.inputs.session_id) else ""
+            ),
+        )
+        wf.run()
 
     def infer_session_id(self):
         """
