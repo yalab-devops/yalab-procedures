@@ -1,8 +1,6 @@
 # mean_bzero.py
 from __future__ import annotations
 
-from pathlib import Path
-
 import nipype.interfaces.mrtrix3 as mrt
 from nipype import Node, Workflow
 from nipype.interfaces.utility import Function, IdentityInterface
@@ -22,7 +20,7 @@ def _discover_paths(
     Returns:
       pa_dwi, pa_json, ap_dwi_rel (relative to sub-root), epi_nii_out, epi_json_out
     """
-    from pathlib import Path
+    from pathlib import Path  # isort:skip
 
     bids = Path(bids_dir)
     sub = f"sub-{subject_id}"
@@ -73,8 +71,8 @@ def _discover_paths(
 
 def _write_epi_json_from_pa(pa_json: str, ap_rel: str, epi_json_out: str) -> str:
     """Create EPI fmap JSON by copying key fields from PA DWI JSON and adding IntendedFor."""
+    from pathlib import Path  # isort:skip
     import json
-    from pathlib import Path
 
     with open(pa_json, "r") as f:
         meta = json.load(f)
@@ -166,6 +164,7 @@ def create_pa_epi_workflow(
 
     # Make the intermediate b0s next to final epi_nii (same folder)
     def _b0s_path(epi_nii: str) -> str:
+        from pathlib import Path  # isort:skip
 
         p = Path(epi_nii)
         return str(p.with_name(p.stem + "_b0s.nii.gz"))
