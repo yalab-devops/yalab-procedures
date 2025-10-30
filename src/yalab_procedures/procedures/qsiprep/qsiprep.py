@@ -70,7 +70,7 @@ class QsiprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     )
     participant_label = traits.List(
         traits.Str,
-        argstr="--participant_label %s",
+        argstr="--participant-label %s",
         desc="Participant label",
         sep=",",
     )
