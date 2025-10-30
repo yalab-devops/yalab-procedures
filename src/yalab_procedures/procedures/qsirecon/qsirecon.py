@@ -19,22 +19,22 @@ from yalab_procedures.procedures.base.procedure import (
 )
 
 
-class QsiprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
+class QsireconInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     """
-    Input specification for the QsiprepProcedure
+    Input specification for the QsireconProcedure
     """
 
     input_directory = Directory(
         exists=True,
         mandatory=True,
         argstr="-v %s:/data:ro",
-        desc="Input directory containing preprocessed data",
+        desc="Input directory containing QSIPrep outputs",
     )
     output_directory = Directory(
         exists=False,
         mandatory=True,
         argstr="-v %s:/out",
-        desc="Directory to store Qsiprep's output",
+        desc="Directory to store Qsirecon's output",
     )
     analysis_level = traits.Str(
         mandatory=False,
@@ -42,13 +42,6 @@ class QsiprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         default_value="participant",
         argstr="%s",
         position=0,
-    )
-    output_resolution = traits.Float(
-        mandatory=True,
-        desc="Output resolution in mm",
-        argstr="--output-resolution %s",
-        default_value=1.6,
-        usedefault=True,
     )
     fs_license_file = File(
         exists=True,
@@ -62,45 +55,21 @@ class QsiprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         argstr="-v %s:/work",
         desc="Path to work directory",
     )
-    qsiprep_version = traits.Str(
+    qsirecon_version = traits.Str(
         mandatory=False,
-        desc="QSIprep version",
+        desc="QSIRcon version",
         default_value="latest",
         argstr="%s",
     )
-    participant_label = traits.List(
-        traits.Str,
-        argstr="--participant_label %s",
+    participant_label = traits.Str(
+        argstr="--participant-label %s",
         desc="Participant label",
-        sep=",",
     )
-    output_spaces = traits.List(
-        traits.Str,
-        argstr="--anatomical-template %s",
-        desc="Output spaces",
-        sep=",",
-    )
-    longitudinal = traits.Bool(
-        True,
-        argstr="--longitudinal",
-        desc="Longitudinal processing. May increase runtime.",
-    )
-    bids_filters = traits.File(
+    recon_spec = File(
         exists=True,
-        argstr="-v %s:/bids_filters.json",
-        desc="BIDS filter file",
+        argstr="-v %s:/recon-spec.yaml",
+        desc="Path to recon-spec YAML file",
     )
-    no_b0_harmonization = traits.Bool(
-        False,
-        argstr="--no-b0-harmonization",
-        desc="Disable B0 harmonization",
-    )
-    skip_bids_validation = traits.Bool(
-        False,
-        argstr="--skip-bids-validation",
-        desc="Skip BIDS validation",
-    )
-
     force = traits.Bool(
         False,
         usedefault=True,
@@ -108,30 +77,30 @@ class QsiprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     )
 
 
-class QsiprepOutputSpec(ProcedureOutputSpec):
+class QsireconOutputSpec(ProcedureOutputSpec):
     """
-    Output specification for the QsiprepProcedure
+    Output specification for the QsireconProcedure
     """
 
     output_directory = Directory(
         exists=True,
-        desc="Directory where Qsiprep outputs are stored",
+        desc="Directory where Qsirecon outputs are stored",
     )
     log_file = File(
         exists=True,
-        desc="Qsiprep log file",
+        desc="Qsirecon log file",
     )
 
 
-class QsiprepProcedure(Procedure, CommandLine):
+class QsireconProcedure(Procedure, CommandLine):
     """
     Procedure for running Qsiprep
     """
 
     _cmd_prefix = "docker run --rm"
-    _cmd = "pennlinc/qsiprep"
-    input_spec = QsiprepInputSpec
-    output_spec = QsiprepOutputSpec
+    _cmd = "pennlinc/qsirecon"
+    input_spec = QsireconInputSpec
+    output_spec = QsireconOutputSpec
     _version = "0.0.1"
 
     def __init__(self, **inputs: Any):
@@ -150,7 +119,7 @@ class QsiprepProcedure(Procedure, CommandLine):
         all_args = []
         metadata = dict(argstr=lambda t: t is not None)
         for name, spec in sorted(self.inputs.traits(**metadata).items()):
-            if name == "qsiprep_version":
+            if name == "qsirecon_version":
                 continue
             argstr = spec.argstr
             if "-v " in argstr:
@@ -174,7 +143,7 @@ class QsiprepProcedure(Procedure, CommandLine):
         mounts: dict = {
             "fs_license_file": "--fs-license-file",
             "work_directory": "--work-dir",
-            "bids_filters": "--bids-filter-file",
+            "recon_spec": "--recon-spec",
         },
     ):
         """
@@ -201,7 +170,7 @@ class QsiprepProcedure(Procedure, CommandLine):
         """
         self._locate_fs_license_file()
         self.setup_logging()
-        self.logger.info("Running QsiprepProcedure")
+        self.logger.info("Running QsireconProcedure")
         self.logger.debug(f"Input attributes: {kwargs}")
 
         if not self.inputs.force:
@@ -266,11 +235,11 @@ class QsiprepProcedure(Procedure, CommandLine):
 
     def _prepare_inputs(self):
         """
-        Prepare inputs for the QsiprepProcedure
+        Prepare inputs for the QsireconProcedure
         """
         work_directory = Path(self.inputs.work_directory)
         input_directory = Path(self.inputs.input_directory)
-        temp_bids = work_directory / self.log_file_path.stem / "bids"
+        temp_bids = work_directory / self.log_file_path.stem / "qsiprep"
         temp_bids.mkdir(parents=True, exist_ok=True)
         # rsync input directory to work directory
         run(
@@ -280,9 +249,9 @@ class QsiprepProcedure(Procedure, CommandLine):
         )
         for fname in [
             "dataset_description.json",
-            "participants.tsv",
-            "participants.json",
-            "README",
+            # "participants.tsv",
+            # "participants.json",
+            # "README",
         ]:
             run(
                 f"rsync -azPL {input_directory / fname} {temp_bids}",
@@ -300,7 +269,7 @@ class QsiprepProcedure(Procedure, CommandLine):
         allargs = (
             [self._cmd_prefix]
             + self._parse_mounted_inputs()
-            + [f"{self._cmd}:{self._get_default_value('qsiprep_version')} /data /out"]
+            + [f"{self._cmd}:{self._get_default_value('qsirecon_version')} /data /out"]
             + [self._get_default_value("analysis_level")]
             + self._parse_cmd_inputs()
             + self._add_mounts_to_command()
