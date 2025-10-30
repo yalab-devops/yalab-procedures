@@ -100,6 +100,16 @@ class QsiprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         argstr="--skip-bids-validation",
         desc="Skip BIDS validation",
     )
+    nprocs = traits.Int(
+        os.cpu_count(),
+        usedefault=True,
+        desc="Number of processes (compute tasks) that can be run in parallel (multiprocessing only).",
+    )
+    omp_nthreads = traits.Int(
+        1,
+        usedefault=True,
+        desc="Number of CPUs a single process can access for multithreaded execution.",
+    )
 
     force = traits.Bool(
         False,
