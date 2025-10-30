@@ -22,6 +22,7 @@ def _discover_paths(
     Returns:
       pa_dwi, pa_json, ap_dwi_rel (relative to sub-root), epi_nii_out, epi_json_out
     """
+    from pathlib import Path
 
     bids = Path(bids_dir)
     sub = f"sub-{subject_id}"
