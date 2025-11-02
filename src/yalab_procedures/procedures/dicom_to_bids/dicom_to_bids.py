@@ -169,6 +169,11 @@ class DicomToBidsProcedure(Procedure, CommandLine):
             ),
         )
         wf.run()
+        # clean up workflow's working directory
+        if wf.base_dir and Path(wf.base_dir).exists():
+            import shutil
+
+            shutil.rmtree(wf.base_dir)
 
     def infer_session_id(self):
         """
