@@ -249,7 +249,7 @@ class QsiprepProcedure(Procedure, CommandLine):
             raise CalledProcessError(
                 result.returncode, command, output=result.stdout, stderr=result.stderr
             )
-        self.logger.info("Finished running SmriprepProcedure")
+        self.logger.info("Finished running QSIPrepProcedure")
         self.logger.info(
             f"Cleaning up temporary input directory: {temp_input_directory}"
         )
@@ -325,9 +325,6 @@ class QsiprepProcedure(Procedure, CommandLine):
         output_directory = Path(self.inputs.output_directory)
         if output_directory.name != "qsiprep":
             output_directory = output_directory / "qsiprep"
-        output_directory = (
-            output_directory / f"sub-{self.inputs.participant_label}.html"
-        )
         outputs = self._outputs().get()
         outputs["output_directory"] = str(output_directory)
         if hasattr(self, "log_file_path"):
