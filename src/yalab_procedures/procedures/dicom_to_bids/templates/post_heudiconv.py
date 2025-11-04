@@ -8,6 +8,41 @@ from nipype.interfaces.utility import Function, IdentityInterface
 # ---------- helpers (used via nipype.utility.Function) ----------
 
 
+def _count_b0s(pa_bval_path: str, b0_threshold: float = 50.0) -> int:
+    """Return the number of volumes with b <= threshold."""
+    import pathlib
+
+    import numpy as np
+
+    p = pathlib.Path(pa_bval_path)
+    if not p.exists():
+        raise FileNotFoundError(f"Missing bval file: {pa_bval_path}")
+    vals = []
+    with open(p, "r") as f:
+        for line in f:
+            vals.extend([float(x) for x in line.strip().split()])
+    vals = np.asarray(vals, dtype=float)
+    return int((vals <= b0_threshold).sum())
+
+
+def _mean_or_copy(in_file: str, out_file: str) -> str:
+    """If in_file is 4D, write temporal mean to out_file; if 3D, copy."""
+    import shutil
+
+    import nibabel as nib
+    import numpy as np
+
+    img = nib.load(in_file)
+    data = img.get_fdata(dtype=np.float32)
+    if data.ndim == 4 and data.shape[3] > 1:
+        m = data.mean(axis=3)
+        out_img = nib.Nifti1Image(m, img.affine, img.header)
+        nib.save(out_img, out_file)
+    else:
+        shutil.copyfile(in_file, out_file)
+    return out_file
+
+
 def _discover_paths(
     bids_dir: str,
     subject_id: str,
@@ -101,20 +136,29 @@ def create_pa_epi_workflow(
     pe_dir: str = "PA",
     target_dir: str = "AP",
     name: str = "make_pa_epi",
+    b0_threshold: float = 50.0,
+    allow_first_as_b0: bool = False,
 ):
     """
     Build a Nipype workflow that:
       - finds PA DWI + an AP DWI target,
-      - dwiextract -bzero (MRtrix) from PA,
-      - mrmath mean along time to create a single-volume mean b0,
+      - extracts b0 volumes from PA (or first vol if allowed and no b0s),
+      - computes mean b0 (safe for 3D/4D),
       - writes BIDS-valid EPI fmap JSON with IntendedFor -> AP DWI.
     """
     wf = Workflow(name=f"{name}_{subject_id}_{session_id or 'nosess'}")
 
-    # Parameters interface
     it = Node(
         IdentityInterface(
-            fields=["bids_dir", "subject_id", "session_id", "pe_dir", "target_dir"]
+            fields=[
+                "bids_dir",
+                "subject_id",
+                "session_id",
+                "pe_dir",
+                "target_dir",
+                "b0_threshold",
+                "allow_first_as_b0",
+            ]
         ),
         name="it",
     )
@@ -123,6 +167,8 @@ def create_pa_epi_workflow(
     it.inputs.session_id = session_id or ""
     it.inputs.pe_dir = pe_dir
     it.inputs.target_dir = target_dir
+    it.inputs.b0_threshold = float(b0_threshold)
+    it.inputs.allow_first_as_b0 = bool(allow_first_as_b0)
 
     # 1) Discover paths
     find = Node(
@@ -153,7 +199,19 @@ def create_pa_epi_workflow(
     wf.connect(it, "pe_dir", find, "pe_dir")
     wf.connect(it, "target_dir", find, "target_dir")
 
-    # 2) Extract b0s from PA (dwiextract -bzero)
+    # 2) Count b0s (fail fast if none, unless allow_first_as_b0)
+    count_b0s = Node(
+        Function(
+            input_names=["pa_bval_path", "b0_threshold"],
+            output_names=["n_b0"],
+            function=_count_b0s,
+        ),
+        name="count_b0s",
+    )
+    wf.connect(find, "pa_bval", count_b0s, "pa_bval_path")
+    wf.connect(it, "b0_threshold", count_b0s, "b0_threshold")
+
+    # 3) Extract b0s (dwiextract -bzero) or vol-0 fallback
     dwiextract = Node(
         mrt.DWIExtract(bzero=True, out_file="b0s.nii.gz", args="-force"),
         name="dwiextract_b0s",
@@ -162,29 +220,52 @@ def create_pa_epi_workflow(
     wf.connect(find, "pa_bval", dwiextract, "in_bval")
     wf.connect(find, "pa_bvec", dwiextract, "in_bvec")
 
-    # Make the intermediate b0s next to final epi_nii (same folder)
-    def _b0s_path(epi_nii: str) -> str:
-        from pathlib import Path  # isort:skip
-
-        p = Path(epi_nii)
-        return str(p.with_name(p.stem + "_b0s.nii.gz"))
-
-    b0s_path = Node(
-        Function(input_names=["epi_nii"], output_names=["out"], function=_b0s_path),
-        name="b0s_path",
+    # Fallback extractor: first volume only (if no b0s but allowed)
+    mrconvert_vol0 = Node(
+        mrt.MRConvert(out_file="b0s_vol0.nii.gz", args="-coord 3 0 -force"),
+        name="mrconvert_vol0",
     )
-    wf.connect(find, "epi_nii", b0s_path, "epi_nii")
+    wf.connect(find, "pa_nii", mrconvert_vol0, "in_file")
 
-    # 3) Mean across time (mrmath mean -axis 3)
-    mrmath_mean = Node(
-        mrt.MRMath(operation="mean", axis=3, args="-force"), name="mean_b0"
+    # Gate which path to use with a tiny selector function
+    def _select_b0_source(
+        n_b0: int, allow_first_as_b0: bool, dwiextract_out: str, vol0_out: str
+    ) -> str:
+        if n_b0 > 0:
+            return dwiextract_out
+        if allow_first_as_b0:
+            return vol0_out
+        raise RuntimeError(
+            "No b0 volumes found in PA series (b<=threshold). "
+            "Either provide a PA series with b0s or set allow_first_as_b0=True to use volume 0 as an approximate b0."
+        )
+
+    select_b0 = Node(
+        Function(
+            input_names=["n_b0", "allow_first_as_b0", "dwiextract_out", "vol0_out"],
+            output_names=["b0_source"],
+            function=_select_b0_source,
+        ),
+        name="select_b0",
     )
-    wf.connect(dwiextract, "out_file", mrmath_mean, "in_file")
-    wf.connect(
-        find, "epi_nii", mrmath_mean, "out_file"
-    )  # write directly to fmap/<sub>_..._epi.nii.gz
+    wf.connect(count_b0s, "n_b0", select_b0, "n_b0")
+    wf.connect(it, "allow_first_as_b0", select_b0, "allow_first_as_b0")
+    wf.connect(dwiextract, "out_file", select_b0, "dwiextract_out")
+    wf.connect(mrconvert_vol0, "out_file", select_b0, "vol0_out")
 
-    # 4) Write JSON sidecar for the EPI fmap
+    # 4) Mean across time (safe for 3D/4D)
+    mean_or_copy = Node(
+        Function(
+            input_names=["in_file", "out_file"],
+            output_names=["out_file"],
+            function=_mean_or_copy,
+        ),
+        name="mean_b0",
+    )
+    wf.connect(select_b0, "b0_source", mean_or_copy, "in_file")
+    wf.connect(find, "epi_nii", mean_or_copy, "out_file")
+
+    # 5) Write JSON sidecar
     write_json = Node(
         Function(
             input_names=["pa_json", "ap_rel", "epi_json_out"],

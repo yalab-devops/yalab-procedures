@@ -50,6 +50,12 @@ class SmriprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         argstr="-v %s:/fslicense.txt",
         desc="Path to FreeSurfer license file",
     )
+    fs_subjects_dir = Directory(
+        exists=False,
+        mandatory=False,
+        argstr="-v %s:/fsdir",
+        desc="Path to FreeSurfer subjects directory",
+    )
     work_directory = Directory(
         exists=False,
         mandatory=True,
@@ -59,7 +65,7 @@ class SmriprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     smriprep_version = traits.Str(
         mandatory=False,
         desc="Smriprep version",
-        default_value="0.15.0",
+        default_value="0.19.2",
         argstr="%s",
     )
     participant_label = traits.Str(
@@ -75,12 +81,18 @@ class SmriprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     longitudinal = traits.Bool(
         True,
         argstr="--longitudinal",
-        desc="Longitudinal processing. May increase runtime.",
+        desc="DEPRECATED. Longitudinal processing. May increase runtime.",
     )
     bids_filters = traits.File(
         exists=True,
         argstr="-v %s:/bids_filters.json",
         desc="BIDS filter file",
+    )
+    anatomical_reference = traits.Str(
+        argstr="--subject-anatomical-reference %s",
+        desc="Anatomical reference for the subject",
+        default_value="unbiased",
+        usedefault=True,
     )
     force = traits.Bool(
         False,
@@ -193,6 +205,9 @@ class SmriprepProcedure(Procedure, CommandLine):
         CalledProcessError
             If the command fails to run. The error message will be logged.
         """
+        # Locate the FreeSurfer license file
+        self._locate_fs_license_file()
+        self.setup_logging()
 
         self.logger.info("Running SmriprepProcedure")
         self.logger.debug(f"Input attributes: {kwargs}")
@@ -207,9 +222,13 @@ class SmriprepProcedure(Procedure, CommandLine):
                     f"Outputs already exist in {self.inputs.output_directory}. If you want to run the procedure again, set force=True."
                 )
                 return
+        finished_file, proceed = self._check_old_runs_finished()
+        if not proceed:
+            self.logger.info(
+                f"Previous run detected as finished in {self.inputs.output_directory}. If you want to run the procedure again, set force=True."  # noqa: E501
+            )
+            return
 
-        # Locate the FreeSurfer license file
-        self._locate_fs_license_file()
         # Prepare inputs
         temp_input_directory = self._prepare_inputs()
         # Run the smriprep command
@@ -229,9 +248,41 @@ class SmriprepProcedure(Procedure, CommandLine):
             raise CalledProcessError(
                 result.returncode, command, output=result.stdout, stderr=result.stderr
             )
+        self.post_run_edits()
         self.logger.info("Finished running SmriprepProcedure")
         # Clean up
         run(f"rm -rf {temp_input_directory}", shell=True, check=True)
+        self._write_finished_file(finished_file)
+
+    def post_run_edits(self):
+        """
+        Post-run edits to the procedure
+        """
+        anatomical_reference = self.inputs.anatomical_reference
+        if anatomical_reference != "unbiased":
+            return
+        output_directory = Path(self.inputs.output_directory)
+        fs_dir = self.inputs.fs_subjects_dir
+        if isdefined(fs_dir):
+            fs_dir = Path(fs_dir)
+        else:
+            fs_dir = output_directory / "freesurfer"
+        subject_label = self.inputs.participant_label
+        # look for sub-<label>_ses-multi* directories
+        if len(self.sessions) > 1:
+            for session_dir in fs_dir.glob(f"sub-{subject_label}_ses-multi*"):
+                self.logger.info(
+                    f"Renaming FreeSurfer directory {session_dir} to remove session label."
+                )
+                new_dir = session_dir.parent / f"sub-{subject_label}"
+                session_dir.rename(new_dir)
+        else:
+            for session_dir in fs_dir.glob(f"sub-{subject_label}_ses-*"):
+                self.logger.info(
+                    f"Renaming FreeSurfer directory {session_dir} to remove session label."
+                )
+                new_dir = session_dir.parent / f"sub-{subject_label}"
+                new_dir.symlink_to(session_dir)
 
     def _locate_fs_license_file(self):
         """
@@ -330,6 +381,8 @@ class SmriprepProcedure(Procedure, CommandLine):
         """
         return [
             session.name.split("-")[-1]
-            for session in Path(self.inputs.input_directory).glob("ses-*")
+            for session in Path(self.inputs.input_directory).glob(
+                f"sub-{self.inputs.participant_label}/ses-*"
+            )
             if session.is_dir()
         ]

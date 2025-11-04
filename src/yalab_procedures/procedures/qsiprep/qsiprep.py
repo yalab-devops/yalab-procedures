@@ -254,7 +254,17 @@ class QsiprepProcedure(Procedure, CommandLine):
             f"Cleaning up temporary input directory: {temp_input_directory}"
         )
         # Clean up
-        run(f"rm -rf {temp_input_directory}", shell=True, check=True)
+        result = run(
+            f"rm -rf {temp_input_directory}",
+            shell=True,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            self.logger.warning(
+                f"Failed to remove temporary input directory: {temp_input_directory}. Error: {result.stderr}"  # noqa: E501
+            )
         self._write_finished_file(finished_file)
 
     def _locate_fs_license_file(self):

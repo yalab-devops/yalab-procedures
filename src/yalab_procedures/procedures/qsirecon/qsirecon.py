@@ -1,4 +1,6 @@
 import os
+import shlex
+from glob import glob
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from typing import Any, Dict
@@ -49,6 +51,27 @@ class QsireconInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         argstr="-v %s:/fslicense.txt",
         desc="Path to FreeSurfer license file",
     )
+    fs_subjects_dir = Directory(
+        exists=False,
+        mandatory=False,
+        argstr="-v %s:/fs_subjects_dir",
+        desc="Path to FreeSurfer subjects directory",
+    )
+    run_recon_all = traits.Bool(
+        False,
+        usedefault=True,
+        desc="If True, run FreeSurfer recon-all on QSIPrep's subject-level T1 before qsirecon.",
+    )
+    use_flair = traits.Bool(
+        False,
+        usedefault=True,
+        desc="If True, include QSIPrep's preprocessed FLAIR with -FLAIR -FLAIRpial in recon-all if available.",
+    )
+    freesurfer_image = traits.Str(
+        "freesurfer/freesurfer:7.4.1",
+        usedefault=True,
+        desc="Docker image tag for FreeSurfer.",
+    )
     work_directory = Directory(
         exists=False,
         mandatory=True,
@@ -69,6 +92,12 @@ class QsireconInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         exists=True,
         argstr="-v %s:/recon-spec.yaml",
         desc="Path to recon-spec YAML file",
+    )
+    atlases = traits.List(
+        traits.Str(),
+        argstr="--atlases %s",
+        sep=",",
+        desc="List of atlases to use",
     )
     force = traits.Bool(
         False,
@@ -142,6 +171,7 @@ class QsireconProcedure(Procedure, CommandLine):
         self,
         mounts: dict = {
             "fs_license_file": "--fs-license-file",
+            "fs_subjects_dir": "--fs-subjects-dir",
             "work_directory": "--work-dir",
             "recon_spec": "--recon-spec",
         },
@@ -191,6 +221,12 @@ class QsireconProcedure(Procedure, CommandLine):
             return
         # Prepare inputs
         temp_input_directory = self._prepare_inputs()
+
+        # OPTIONAL: run recon-all first
+        if self.inputs.run_recon_all:
+            fsdir = self._ensure_fs_subjects_dir()
+            t1, flair = self._locate_qsiprep_preproc_anat()
+            self._run_recon_all(fsdir, t1, flair)
         # Run the qsiprep command
         command = self.cmdline
         # Log the command
@@ -302,3 +338,125 @@ class QsireconProcedure(Procedure, CommandLine):
             for session in Path(self.inputs.input_directory).glob("ses-*")
             if session.is_dir()
         ]
+
+    def _ensure_fs_subjects_dir(self) -> Path:
+        """
+        Ensure a writable FreeSurfer subjects dir exists and is mounted later.
+        If the user didn't provide one, create under work/<logstem>/freesurfer.
+        """
+        if isdefined(self.inputs.fs_subjects_dir):
+            fsdir = Path(self.inputs.fs_subjects_dir)
+        else:
+            input_dir = Path(self.inputs.input_directory)
+            if input_dir.name == "qsiprep":
+                input_dir = input_dir.parent
+            fsdir = Path(input_dir) / "freesurfer"
+            fsdir.mkdir(parents=True, exist_ok=True)
+            # wire it into inputs so the existing -v %s:/fs_subjects_dir mount is added
+            self.inputs.fs_subjects_dir = str(fsdir)
+        fsdir.mkdir(parents=True, exist_ok=True)
+        return fsdir
+
+    def _locate_qsiprep_preproc_anat(self) -> tuple[str, str | None]:
+        """
+        Locate QSIPrep's subject-level preprocessed T1 (and optional FLAIR) inside the
+        temp input directory we created (_prepare_inputs). Prefer the subject-level anat
+        (sub-<id>/anat/sub-<id>_desc-preproc_T1w.nii.gz). Fallback to first session.
+        """
+        sub = f"sub-{self.inputs.participant_label}"
+        root = Path(self.inputs.input_directory)
+
+        # Subject-level preferred
+        t1_candidates = sorted(
+            glob(str(root / sub / "anat" / f"{sub}_space-ACPC_desc-preproc_T1w.nii.gz"))
+        )
+        flair_candidates = sorted(
+            glob(
+                str(root / sub / "anat" / f"{sub}_space-ACPC_desc-preproc_FLAIR.nii.gz")
+            )
+        )
+
+        # Fallback to any session if subject-level not present
+        if not t1_candidates:
+            t1_candidates = sorted(
+                glob(
+                    str(
+                        root
+                        / sub
+                        / "ses-*"
+                        / "anat"
+                        / f"{sub}_ses-*_desc-preproc_T1w.nii.gz"
+                    )
+                )
+            )
+        if not flair_candidates:
+            flair_candidates = sorted(
+                glob(
+                    str(
+                        root
+                        / sub
+                        / "ses-*"
+                        / "anat"
+                        / f"{sub}_ses-*_desc-preproc_FLAIR.nii.gz"
+                    )
+                )
+            )
+
+        if not t1_candidates:
+            raise FileNotFoundError(
+                f"Could not find QSIPrep preprocessed T1 for {sub} under {root}. "
+                "Expected .../sub-<id>/anat/*desc-preproc_T1w.nii.gz or ses-*/anat/..."
+            )
+
+        t1 = t1_candidates[0]
+        flair = (
+            flair_candidates[0]
+            if (self.inputs.use_flair and flair_candidates)
+            else None
+        )
+        return t1, flair
+
+    def _run_recon_all(self, fsdir: Path, t1_path: str, flair_path: str | None):
+        """
+        Run FreeSurfer recon-all in Docker on the provided T1 (and optional FLAIR).
+        Writes to fsdir/sub-<label>. Runs container as host UID:GID to avoid root ownership.
+        """
+        sub_id = f"sub-{self.inputs.participant_label}"
+        fs_license = self.inputs.fs_license_file
+        if not isdefined(fs_license):
+            raise ValueError(
+                "fs_license_file must be provided (or FREESURFER_HOME set)."
+            )
+
+        # Build docker run
+        fsimg = self.inputs.freesurfer_image
+
+        # Mounts
+        mounts = [
+            f"-v {shlex.quote(t1_path)}:/in/T1.nii.gz:ro",
+            f"-v {shlex.quote(str(fsdir))}:/out",
+            f"-v {shlex.quote(fs_license)}:/fslicense.txt:ro",
+        ]
+        flair_mount = (
+            f"-v {shlex.quote(flair_path)}:/in/FLAIR.nii.gz:ro" if flair_path else ""
+        )
+        if flair_mount:
+            mounts.append(flair_mount)
+
+        flair_args = "-FLAIR /in/FLAIR.nii.gz -FLAIRpial" if flair_path else ""
+
+        cmd = (
+            f"docker run --rm -i {' '.join(mounts)} "
+            f"{fsimg} bash -lc "
+            f'"export FS_LICENSE=/fslicense.txt; '
+            f'recon-all -sd /out -subject {sub_id} -i /in/T1.nii.gz {flair_args} -all"'
+        )
+
+        self.logger.info(f"Running recon-all: {cmd}")
+        res = run(cmd, shell=True, capture_output=True, text=True)
+        self.logger.info(res.stdout)
+        if res.returncode != 0:
+            self.logger.error(res.stderr)
+            raise CalledProcessError(
+                res.returncode, cmd, output=res.stdout, stderr=res.stderr
+            )
