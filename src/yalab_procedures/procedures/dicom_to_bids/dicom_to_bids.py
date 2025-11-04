@@ -3,6 +3,7 @@
 import shlex
 from pathlib import Path
 from subprocess import CalledProcessError, run
+from tempfile import TemporaryDirectory
 
 from nipype.interfaces.base import (
     CommandLine,
@@ -160,20 +161,17 @@ class DicomToBidsProcedure(Procedure, CommandLine):
         """
         Post-process fieldmap correction if needed
         """
-        wf = create_pa_epi_workflow(
-            name="post_heudiconv_fieldmap_correction",
-            bids_dir=str(self.inputs.output_directory),
-            subject_id=self.inputs.subject_id,
-            session_id=(
-                self.inputs.session_id if isdefined(self.inputs.session_id) else ""
-            ),
-        )
-        wf.run()
-        # clean up workflow's working directory
-        if wf.base_dir and Path(wf.base_dir).exists():
-            import shutil
-
-            shutil.rmtree(wf.base_dir)
+        with TemporaryDirectory() as tmpdir:
+            wf = create_pa_epi_workflow(
+                name="post_heudiconv_fieldmap_correction",
+                bids_dir=str(self.inputs.output_directory),
+                subject_id=self.inputs.subject_id,
+                session_id=(
+                    self.inputs.session_id if isdefined(self.inputs.session_id) else ""
+                ),
+            )
+            wf.base_dir = tmpdir
+            wf.run()
 
     def infer_session_id(self):
         """
