@@ -32,6 +32,11 @@ class QsireconInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         argstr="-v %s:/data:ro",
         desc="Input directory containing QSIPrep outputs",
     )
+    temporary_bids_directory = Directory(
+        exists=False,
+        mandatory=False,
+        desc="Temporary QSIPrep directory",
+    )
     output_directory = Directory(
         exists=False,
         mandatory=True,
@@ -275,7 +280,17 @@ class QsireconProcedure(Procedure, CommandLine):
         """
         work_directory = Path(self.inputs.work_directory)
         input_directory = Path(self.inputs.input_directory)
-        temp_bids = work_directory / self.log_file_path.stem / "qsiprep"
+        temporary_bids_directory = self.inputs.temporary_bids_directory
+        if isdefined(temporary_bids_directory):
+            temp_bids = Path(temporary_bids_directory)
+            temp_bids.mkdir(parents=True, exist_ok=True)
+        else:
+            temp_bids = work_directory
+        # generate random temporary directory
+        temp_bids = temp_bids / f"qsiprep_temp_bids_{os.getpid()}"
+        self.logger.info(
+                f"Using provided temporary BIDS directory: {temp_bids}"
+            )
         temp_bids.mkdir(parents=True, exist_ok=True)
         # rsync input directory to work directory
         run(
