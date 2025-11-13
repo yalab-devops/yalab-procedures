@@ -287,7 +287,7 @@ class QsireconProcedure(Procedure, CommandLine):
         else:
             temp_bids = work_directory
         # generate random temporary directory
-        temp_bids = temp_bids / f"qsiprep_temp_bids_{os.getpid()}"
+        temp_bids = temp_bids / f"qsirecon_temp_bids_{os.getpid()}"
         self.logger.info(
                 f"Using provided temporary BIDS directory: {temp_bids}"
             )
