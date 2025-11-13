@@ -30,6 +30,11 @@ class QsiprepInputSpec(ProcedureInputSpec, CommandLineInputSpec):
         argstr="-v %s:/data:ro",
         desc="Input directory containing preprocessed data",
     )
+    temporary_bids_directory = Directory(
+        exists=False,
+        mandatory=False,
+        desc="Temporary BIDS directory",
+    )
     output_directory = Directory(
         exists=False,
         mandatory=True,
@@ -246,9 +251,7 @@ class QsiprepProcedure(Procedure, CommandLine):
         self.logger.info(result.stdout)
         if result.stderr:
             self.logger.error(result.stderr)
-            raise CalledProcessError(
-                result.returncode, command, output=result.stdout, stderr=result.stderr
-            )
+            
         self.logger.info("Finished running QSIPrepProcedure")
         self.logger.info(
             f"Cleaning up temporary input directory: {temp_input_directory}"
@@ -290,7 +293,17 @@ class QsiprepProcedure(Procedure, CommandLine):
         """
         work_directory = Path(self.inputs.work_directory)
         input_directory = Path(self.inputs.input_directory)
-        temp_bids = work_directory / self.log_file_path.stem / "bids"
+        temporary_bids_directory = self.inputs.temporary_bids_directory
+        if isdefined(temporary_bids_directory):
+            temp_bids = Path(temporary_bids_directory)
+            temp_bids.mkdir(parents=True, exist_ok=True)
+        else:
+            temp_bids = work_directory
+        # generate random temporary directory
+        temp_bids = temp_bids / f"qsiprep_temp_bids_{os.getpid()}"
+        self.logger.info(
+                f"Using provided temporary BIDS directory: {temp_bids}"
+            )
         temp_bids.mkdir(parents=True, exist_ok=True)
         # rsync input directory to work directory
         for participant in self.inputs.participant_label:
