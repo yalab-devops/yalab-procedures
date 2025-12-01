@@ -332,7 +332,6 @@ class QsireconProcedure(Procedure, CommandLine):
         output_directory = Path(self.inputs.output_directory)
         if output_directory.name != "qsirecon":
             output_directory = output_directory / "qsirecon"
-        output_directory = output_directory / f"sub-{self.inputs.participant_label}"
         outputs = self._outputs().get()
         outputs["output_directory"] = str(output_directory)
         if hasattr(self, "log_file_path"):
