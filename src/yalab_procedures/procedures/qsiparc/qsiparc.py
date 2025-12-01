@@ -201,8 +201,10 @@ class QsiparcProcedure(Procedure):
             for derivatives in (input_directory / "derivatives").glob(
                 f"qsirecon-*/sub-{participant}"
             ):
+                dest = temp_bids / "derivatives" / derivatives.parent.name
+                dest.mkdir(parents=True, exist_ok=True)
                 run(
-                    f"rsync -azPL --exclude='*.tck*' --exclude='*.trk*' {derivatives} {temp_bids / 'derivatives'}",
+                    f"rsync -azPL --exclude='*.tck*' --exclude='*.trk*' {derivatives} {dest}",
                     shell=True,
                     check=True,
                 )
