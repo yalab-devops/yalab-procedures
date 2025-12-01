@@ -101,7 +101,7 @@ class QsireconInputSpec(ProcedureInputSpec, CommandLineInputSpec):
     atlases = traits.List(
         traits.Str(),
         argstr="--atlases %s",
-        sep=",",
+        sep=" ",
         desc="List of atlases to use",
     )
     force = traits.Bool(
@@ -288,9 +288,7 @@ class QsireconProcedure(Procedure, CommandLine):
             temp_bids = work_directory
         # generate random temporary directory
         temp_bids = temp_bids / f"qsirecon_temp_bids_{os.getpid()}"
-        self.logger.info(
-                f"Using provided temporary BIDS directory: {temp_bids}"
-            )
+        self.logger.info(f"Using provided temporary BIDS directory: {temp_bids}")
         temp_bids.mkdir(parents=True, exist_ok=True)
         # rsync input directory to work directory
         run(
@@ -332,11 +330,9 @@ class QsireconProcedure(Procedure, CommandLine):
         List the outputs of the QsiprepProcedure
         """
         output_directory = Path(self.inputs.output_directory)
-        if output_directory.name != "qsiprep":
-            output_directory = output_directory / "qsiprep"
-        output_directory = (
-            output_directory / f"sub-{self.inputs.participant_label}.html"
-        )
+        if output_directory.name != "qsirecon":
+            output_directory = output_directory / "qsirecon"
+        output_directory = output_directory / f"sub-{self.inputs.participant_label}"
         outputs = self._outputs().get()
         outputs["output_directory"] = str(output_directory)
         if hasattr(self, "log_file_path"):
