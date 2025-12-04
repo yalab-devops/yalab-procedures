@@ -87,9 +87,9 @@ class QsiparcOutputSpec(ProcedureOutputSpec):
     Output specification for the QsiparcProcedure
     """
 
-    output_directory = Directory(
-        exists=True,
-        desc="Directory where Qsiparc outputs are stored",
+    output_directory = traits.List(
+        Directory,
+        desc="Qsiparc output directory",
     )
     log_file = File(
         exists=True,
@@ -230,7 +230,13 @@ class QsiparcProcedure(Procedure):
         if output_directory.name != "qsiparc":
             output_directory = output_directory / "qsiparc"
         outputs = self._outputs().get()
-        outputs["output_directory"] = str(output_directory)
+        outputs["output_directory"] = [
+            d
+            for d in Path(output_directory).glob(
+                f"*/sub-{self.inputs.participant_label[0]}"
+            )
+            if d.is_dir()
+        ]
         if hasattr(self, "log_file_path"):
             outputs["log_file"] = str(self.log_file_path)
         return outputs
