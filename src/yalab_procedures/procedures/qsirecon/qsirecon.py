@@ -1,5 +1,6 @@
 import os
 import shlex
+import shutil
 from glob import glob
 from pathlib import Path
 from subprocess import CalledProcessError, run
@@ -426,12 +427,30 @@ class QsireconProcedure(Procedure, CommandLine):
         )
         return t1, flair
 
+    def locate_fs_run(self, fsdir, sub_id: str) -> Path | None:
+        """
+        Locate a previous FreeSurfer recon-all run for the given subject ID in the
+        provided FreeSurfer subjects directory.
+        """
+        subject_dir = fsdir / f"sub-{sub_id}"
+        if subject_dir.exists():
+            if (subject_dir / "scripts" / "recon-all.done").exists():
+                return True
+            else:
+                shutil.rmtree(subject_dir)
+        return False
+
     def _run_recon_all(self, fsdir: Path, t1_path: str, flair_path: str | None):
         """
         Run FreeSurfer recon-all in Docker on the provided T1 (and optional FLAIR).
         Writes to fsdir/sub-<label>. Runs container as host UID:GID to avoid root ownership.
         """
         sub_id = f"sub-{self.inputs.participant_label}"
+        if self.locate_fs_run(fsdir, sub_id):
+            self.logger.info(
+                f"Found existing recon-all output for {sub_id} in {fsdir}, skipping recon-all."
+            )
+            return
         fs_license = self.inputs.fs_license_file
         if not isdefined(fs_license):
             raise ValueError(
